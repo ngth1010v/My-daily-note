@@ -1,0 +1,30 @@
+# Android / Gradle build output
+*.iml
+.gradle/
+build/
+/local.properties
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.aab
+
+# Release signing: credentials and keystores never go in version control.
+/keystore.properties
+/keystore/
+*.jks
+*.keystore
+
+# Android Studio / IntelliJ
+.idea/
+*.hprof
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kotlin 2.x compiler session data
+.kotlin/
+
+# Session progress log (local only)
+/PROCESS.md
