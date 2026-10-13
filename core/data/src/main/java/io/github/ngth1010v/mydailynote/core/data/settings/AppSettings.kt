@@ -35,7 +35,8 @@ data class AppSettings(
     companion object {
         const val DEFAULT_COLOR = "teal"
         const val DEFAULT_ENGINE = "vosk"
-        const val DEFAULT_WHISPER_MODEL = "whisper-tiny-q5_1"
+        /** Tiny / base are too weak for Vietnamese. */
+        const val DEFAULT_WHISPER_MODEL = "whisper-small-q5_1"
         val AUTO_STOP_CHOICES = listOf(0, 1000, 1500, 2000, 3000)
     }
 }

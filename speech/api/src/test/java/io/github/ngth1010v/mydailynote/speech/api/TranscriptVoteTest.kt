@@ -25,11 +25,14 @@ class TranscriptVoteTest {
     }
 
     @Test
-    fun perWordVoteWhenNoTranscriptRepeats() {
+    fun neverMixesWordsOfDifferentRuns() {
         val a = run("call" to 0.9f, "mom" to 0.4f, "now" to 0.9f)
         val b = run("call" to 0.9f, "mum" to 0.5f, "no" to 0.5f)
         val c = run("cool" to 0.5f, "mom" to 0.6f, "now" to 0.9f)
         assertEquals("call mom now", TranscriptVote.choose(listOf(a, b, c)).text())
+        val d = run("go" to 0.7f, "home" to 0.7f)
+        val e = run("so" to 0.9f, "hum" to 0.4f)
+        assertEquals("go home", TranscriptVote.choose(listOf(e, d)).text())
     }
 
     @Test

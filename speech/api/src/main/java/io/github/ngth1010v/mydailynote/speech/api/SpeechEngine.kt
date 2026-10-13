@@ -82,14 +82,15 @@ interface SpeechRefiner {
     suspend fun prepare(modelId: String) {}
 
     /**
-     * Returns the improved text, or null to keep the streaming result. [prompt] = words the user
-     * often says (biases spelling); [autoLanguage] = pick English or Vietnamese from the audio.
+     * Returns the improved text, or null to keep the streaming result. [vocabulary] = phrases the
+     * user often says, most frequent first (biases spelling); [autoLanguage] = pick English or
+     * Vietnamese from the audio.
      */
     suspend fun refine(
         audio: ShortArray,
         language: VoiceLanguage,
         modelId: String,
-        prompt: String? = null,
+        vocabulary: List<String> = emptyList(),
         autoLanguage: Boolean = false,
     ): String?
 }

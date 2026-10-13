@@ -29,7 +29,9 @@ Java_io_github_ngth1010v_mydailynote_speech_whisper_WhisperNative_free(JNIEnv *,
     whisper_free(reinterpret_cast<whisper_context *>(ptr));
 }
 
-// Returns one "<prob>\t<word>\n" line per recognized word; prob = the weakest token of the word (0..1).
+// Returns one "<prob>\t<word>\n" line per recognized word; prob = mean over the word's tokens (0..1).
+// Not the weakest token: a Vietnamese word is often several byte-level tokens and one of them nearly
+// always looked unsure, so almost every Vietnamese clip went through the recheck.
 // beamSize <= 1 = greedy sampling (best_of 5, useful with temperature > 0). vadPath / prompt empty = unused.
 JNIEXPORT jstring JNICALL
 Java_io_github_ngth1010v_mydailynote_speech_whisper_WhisperNative_transcribe(
@@ -80,11 +82,13 @@ Java_io_github_ngth1010v_mydailynote_speech_whisper_WhisperNative_transcribe(
 
     // A token starting with a space opens a new word; the others continue it.
     std::string out, word;
-    float minProb = 1.f;
+    float probSum = 0.f;
+    int probCount = 0;
     auto flush = [&]() {
-        if (!word.empty()) out += std::to_string(minProb) + "\t" + word + "\n";
+        if (!word.empty() && probCount > 0) out += std::to_string(probSum / probCount) + "\t" + word + "\n";
         word.clear();
-        minProb = 1.f;
+        probSum = 0.f;
+        probCount = 0;
     };
     const whisper_token eot = whisper_token_eot(ctx);
     int segments = whisper_full_n_segments(ctx);
@@ -97,7 +101,8 @@ Java_io_github_ngth1010v_mydailynote_speech_whisper_WhisperNative_transcribe(
             if (text == nullptr || text[0] == '\0') continue;
             if (text[0] == ' ') flush();
             for (const char *c = text; *c; ++c) if (*c != ' ' && *c != '\n' && *c != '\t') word += *c;
-            minProb = std::min(minProb, d.p);
+            probSum += d.p;
+            ++probCount;
         }
         flush();
     }

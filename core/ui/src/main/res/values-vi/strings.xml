@@ -120,6 +120,7 @@
     <string name="pref_high_accuracy">Tăng độ chính xác</string>
     <string name="pref_high_accuracy_summary">Kiểm tra lại mỗi bản ghi bằng Whisper. Chậm hơn; cần mô hình Whisper.</string>
     <string name="pref_whisper_model">Mô hình Whisper</string>
+    <string name="pref_whisper_model_hint">Tiny và base nhận tiếng Việt kém; nên dùng small trở lên.</string>
     <string name="models_section_vosk">Nhận dạng trực tiếp (Vosk)</string>
     <string name="models_section_whisper">Độ chính xác cao (Whisper)</string>
     <string name="pref_export">Xuất dữ liệu</string>

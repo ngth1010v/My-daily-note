@@ -124,6 +124,7 @@
     <string name="pref_high_accuracy">High accuracy pass</string>
     <string name="pref_high_accuracy_summary">Re-check each recording with Whisper. Slower; needs a Whisper model.</string>
     <string name="pref_whisper_model">Whisper model</string>
+    <string name="pref_whisper_model_hint">Tiny and base are weak for Vietnamese; small or larger is recommended.</string>
     <string name="models_section_vosk">Live recognition (Vosk)</string>
     <string name="models_section_whisper">High accuracy (Whisper)</string>
     <string name="pref_export">Export</string>

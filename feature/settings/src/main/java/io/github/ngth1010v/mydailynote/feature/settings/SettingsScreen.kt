@@ -326,10 +326,15 @@ private fun LazyListScope.voice(vm: SettingsViewModel, s: AppSettings, onModels:
         ) { v -> vm.update { it.copy(highAccuracy = v) } }
     }
     item {
+        val options = ModelRegistry.whisper.map { it.id to it.displayName }
         ChoicePref(
             stringResource(R.string.pref_whisper_model),
-            ModelRegistry.whisper.map { it.id to it.displayName },
+            options,
             s.whisperModelId,
+            summary = listOfNotNull(
+                options.firstOrNull { it.first == s.whisperModelId }?.second,
+                stringResource(R.string.pref_whisper_model_hint),
+            ).joinToString("\n"),
         ) { v -> vm.update { it.copy(whisperModelId = v) } }
     }
 }

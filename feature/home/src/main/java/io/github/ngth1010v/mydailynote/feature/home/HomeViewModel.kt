@@ -211,12 +211,11 @@ class HomeViewModel(
         mode = InputMode.Voice(VoicePhase.LISTENING)
         voiceJob = viewModelScope.launch {
             var finished = false
-            // The user's most frequent actions: primes Whisper's spelling and lets results snap to them.
+            // The user's most frequent actions: prime Whisper's spelling and let results snap to them.
             val known = entries.suggestions("", KNOWN_TEXTS).first().map { it.text }
-            val prompt = known.take(PROMPT_TEXTS).joinToString(", ").ifEmpty { null }
             fun snap(heard: String) = TextNormalizer.closestKnown(heard, known) ?: heard
             val auto = s.voiceLanguage == VoiceLanguage.AUTO_TAG
-            pipeline.start(s.speechEngine, lang, s.autoStopMs, refineModel(s), prompt, auto).collect { e ->
+            pipeline.start(s.speechEngine, lang, s.autoStopMs, refineModel(s), known, auto).collect { e ->
                 when (e) {
                     SpeechEvent.Listening -> {}
                     is SpeechEvent.Level -> level = e.level
@@ -363,6 +362,3 @@ class HomeViewModel(
 
 /** Frequent past actions a voice result may snap to. */
 private const val KNOWN_TEXTS = 200
-
-/** How many of them go into Whisper's prompt (it only reads ~220 tokens). */
-private const val PROMPT_TEXTS = 30

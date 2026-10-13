@@ -3,6 +3,9 @@ package io.github.ngth1010v.mydailynote.speech.whisper
 import android.content.Context
 import io.github.ngth1010v.mydailynote.speech.api.AudioGain
 import io.github.ngth1010v.mydailynote.speech.api.ModelManager
+import io.github.ngth1010v.mydailynote.speech.api.ModelRegistry
+import io.github.ngth1010v.mydailynote.speech.api.NoiseLevel
+import io.github.ngth1010v.mydailynote.speech.api.PromptVocabulary
 import io.github.ngth1010v.mydailynote.speech.api.ScoredWord
 import io.github.ngth1010v.mydailynote.speech.api.SpeechRefiner
 import io.github.ngth1010v.mydailynote.speech.api.TranscriptVote
@@ -39,10 +42,11 @@ internal object WhisperNative {
 }
 
 /**
- * Second pass with whisper.cpp over the recorded clip (16 kHz mono): RNNoise removes background
- * noise, quiet speech is boosted, Silero VAD (inside whisper) skips the silent parts, and decoding
- * is beam search primed with the user's own vocabulary. If any word is low-confidence the clip is
- * decoded again (raw audio, then a sampled run) and the runs vote. Keeps one model loaded.
+ * Second pass with whisper.cpp over the recorded clip (16 kHz mono): noisy clips go through
+ * RNNoise, quiet speech is boosted, Silero VAD (inside whisper) skips the silent parts, and decoding
+ * is beam search primed with the user's own phrases in the clip's language (small+ models only).
+ * If any word is low-confidence the clip is decoded again from the other input (denoised or not)
+ * and the better whole run wins. Keeps one model loaded.
  */
 class WhisperRefiner(private val models: ModelManager, context: Context) : SpeechRefiner {
     private val appContext = context.applicationContext
@@ -60,7 +64,7 @@ class WhisperRefiner(private val models: ModelManager, context: Context) : Speec
         audio: ShortArray,
         language: VoiceLanguage,
         modelId: String,
-        prompt: String?,
+        vocabulary: List<String>,
         autoLanguage: Boolean,
     ): String? =
         lock.withLock {
@@ -68,23 +72,34 @@ class WhisperRefiner(private val models: ModelManager, context: Context) : Speec
                 if (!ensureLoaded(modelId)) return@withContext null
                 val threads = Runtime.getRuntime().availableProcessors().coerceIn(1, 4)
                 val vad = SileroModel.path(appContext)
-                val clean = AudioGain.normalize(runCatching { WhisperNative.denoise(audio) }.getOrDefault(audio))
+                val raw = AudioGain.normalize(audio)
+                // RNNoise distorts clean speech (Vietnamese tones especially): only use it on noisy clips.
+                val denoised by lazy {
+                    AudioGain.normalize(runCatching { WhisperNative.denoise(audio) }.getOrDefault(audio))
+                }
+                val noisy = NoiseLevel.isNoisy(audio)
+                val main = if (noisy) denoised else raw
                 val lang = if (!autoLanguage) language.tag else WhisperNative.detectLanguage(
-                    ctx, toFloat(clean), threads, VoiceLanguage.entries.joinToString(",") { it.tag },
+                    ctx, toFloat(main), threads, VoiceLanguage.entries.joinToString(",") { it.tag },
                 )
-                fun decode(pcm: ShortArray, beam: Int, temperature: Float): List<ScoredWord>? =
-                    WhisperNative.transcribe(ctx, toFloat(pcm), lang, threads, beam, temperature, vad, prompt.orEmpty())
+                // Small models copy the prompt into the result instead of using it as a spelling hint.
+                val prompt = if (promptSafe(modelId)) PromptVocabulary.prompt(vocabulary, lang).orEmpty() else ""
+                fun decode(pcm: ShortArray): List<ScoredWord>? =
+                    WhisperNative.transcribe(ctx, toFloat(pcm), lang, threads, BEAM, 0f, vad, prompt)
                         ?.let(::parseWords)
 
-                val first = decode(clean, BEAM, 0f) ?: return@withContext null
+                val first = decode(main) ?: return@withContext null
                 var runs = listOf(first)
                 if (TranscriptVote.needsRecheck(first)) {
-                    // Different input / decoding on purpose: the denoiser can hurt, greedy + temperature explores.
-                    runs = runs + listOfNotNull(decode(AudioGain.normalize(audio), BEAM, 0f), decode(clean, 1, 0.4f))
+                    // The other input on purpose: the denoiser helps some clips and hurts others.
+                    runs = runs + listOfNotNull(decode(if (noisy) raw else denoised))
                 }
                 TranscriptVote.choose(runs).joinToString(" ") { it.text }.takeIf { it.isNotBlank() }
             }
         }
+
+    private fun promptSafe(modelId: String): Boolean =
+        (ModelRegistry.get(modelId)?.sizeBytes ?: 0L) >= PROMPT_MIN_MODEL_BYTES
 
     /** Caller holds [lock]. */
     private suspend fun ensureLoaded(modelId: String): Boolean {
@@ -109,6 +124,8 @@ class WhisperRefiner(private val models: ModelManager, context: Context) : Speec
     private companion object {
         const val MIN_SAMPLES = 16_000 + 1_600
         const val BEAM = 5
+        /** Whisper small and up; tiny / base repeat the prompt instead of using it. */
+        const val PROMPT_MIN_MODEL_BYTES = 100_000_000L
 
         /** Parses "<prob>\t<word>" lines; drops non-speech tags Whisper emits ("[BLANK_AUDIO]", "(music)"). */
         fun parseWords(raw: String): List<ScoredWord> {
