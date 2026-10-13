@@ -19,9 +19,13 @@ Voice recognition runs **completely offline** on your phone. English and Tiếng
 - **Offline voice, two passes**: words appear live while you speak ([Vosk](https://alphacephei.com/vosk/)), then an optional
   high-accuracy pass ([whisper.cpp](https://github.com/ggml-org/whisper.cpp)) replaces the sentence. Auto-stops after a pause.
   Long-press the mic to switch the voice language.
+- **Cleaner voice audio**: background noise removed ([RNNoise](https://github.com/xiph/rnnoise)), silence skipped and
+  auto-stop decided by [Silero VAD](https://github.com/snakers4/silero-vad); uncertain words are decoded again and voted on.
+  Whisper is primed with your own frequent actions, results snap to an action you logged before, and an
+  "Auto (English / Vietnamese)" voice language picks the language per recording.
 - **History by day**: chat-style list (newest at the bottom, scroll up for the past), sticky day labels and a "day starts at" setting for night owls.
   Windowed loading (Paging 3 + LazyColumn), so it stays smooth with years of entries.
-- **Per-action color & icon**, edit text/description, change the time, delete with undo.
+- **Per-action color & icon**; tap a row to edit text, description, time, color and icon; delete with undo.
 - **Suggestions**: frequent actions appear as you type; one tap logs them again.
 - **Search** that ignores Vietnamese diacritics ("ca phe" finds "cà phê").
 - **Home-screen widget, Quick Settings tile, app shortcuts, share-to-app.**
@@ -41,6 +45,7 @@ You can also import model files manually in *Settings → Voice models* for devi
 | Model | Used for | Size | License |
 |---|---|---|---|
 | Vosk small English 0.15 | live recognition | 41 MB | Apache-2.0 |
+| Vosk English (US) 0.22 lgraph | more accurate live English (optional, used when installed) | 131 MB | Apache-2.0 |
 | Vosk small Vietnamese 0.4 | live recognition | 34 MB | Apache-2.0 |
 | Whisper tiny / base (q5_1) | high-accuracy pass (optional) | 32 / 60 MB | MIT |
 | Whisper small (q5_1) / medium (q5_0) / large-v3 turbo (q5_0) | higher accuracy, optional large download (asks first) | 190 / 539 / 574 MB | MIT |
