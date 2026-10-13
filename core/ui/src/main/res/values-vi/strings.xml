@@ -107,6 +107,7 @@
     <string name="pref_default_color">Màu mặc định của hành động</string>
     <string name="pref_voice_language">Ngôn ngữ giọng nói</string>
     <string name="voice_lang_follow">Giống ngôn ngữ ứng dụng</string>
+    <string name="voice_lang_auto">Tự động (Anh / Việt, cần chế độ chính xác cao)</string>
     <string name="pref_engine">Bộ nhận dạng</string>
     <string name="engine_vosk">Vosk (ngoại tuyến, khuyên dùng)</string>
     <string name="engine_android">Android trên thiết bị</string>

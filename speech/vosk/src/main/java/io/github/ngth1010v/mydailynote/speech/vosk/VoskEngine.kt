@@ -45,15 +45,18 @@ class VoskEngine(
         LibVosk.setLogLevel(LogLevel.WARNINGS)
     }
 
-    override fun isAvailable(language: VoiceLanguage): Boolean =
-        models.isInstalled(ModelRegistry.vosk(language).id)
+    override fun isAvailable(language: VoiceLanguage): Boolean = installedSpec(language) != null
+
+    /** The most accurate installed model for [language]. */
+    private fun installedSpec(language: VoiceLanguage) =
+        ModelRegistry.voskByAccuracy(language).firstOrNull { models.isInstalled(it.id) }
 
     override suspend fun prepare(language: VoiceLanguage) {
         load(language)
     }
 
     private suspend fun load(language: VoiceLanguage): Model? = loadLock.withLock {
-        val spec = ModelRegistry.vosk(language)
+        val spec = installedSpec(language) ?: return null
         loaded?.let { (id, model) -> if (id == spec.id) return model }
         val path = models.path(spec.id) ?: return null
         withContext(Dispatchers.IO) {

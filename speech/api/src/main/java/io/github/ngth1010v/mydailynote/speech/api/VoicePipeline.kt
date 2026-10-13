@@ -30,6 +30,8 @@ class VoicePipeline(
         language: VoiceLanguage,
         autoStopMs: Int,
         refineModelId: String?,
+        prompt: String? = null,
+        autoLanguage: Boolean = false,
     ): Flow<SpeechEvent> = flow {
         val engine = engine(engineId)
         val refine = refineModelId?.takeIf { refinerAvailable(it) }
@@ -40,7 +42,7 @@ class VoicePipeline(
                 val audio = (event as? SpeechEvent.Final)?.audio
                 if (refine != null && audio != null && event.text.isNotBlank()) {
                     emit(SpeechEvent.Refining)
-                    val better = runCatching { refiner?.refine(audio, language, refine) }.getOrNull()
+                    val better = runCatching { refiner?.refine(audio, language, refine, prompt, autoLanguage) }.getOrNull()
                     if (!better.isNullOrBlank()) emit(SpeechEvent.Refined(better))
                 }
             }

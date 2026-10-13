@@ -111,6 +111,7 @@
     <string name="pref_default_color">Default action color</string>
     <string name="pref_voice_language">Voice language</string>
     <string name="voice_lang_follow">Same as app language</string>
+    <string name="voice_lang_auto">Auto (English / Vietnamese, needs high accuracy pass)</string>
     <string name="pref_engine">Recognition engine</string>
     <string name="engine_vosk">Vosk (offline, recommended)</string>
     <string name="engine_android">Android on-device</string>

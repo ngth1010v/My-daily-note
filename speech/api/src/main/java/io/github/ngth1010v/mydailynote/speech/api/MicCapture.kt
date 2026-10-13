@@ -14,7 +14,11 @@ class MicUnavailableException(message: String) : Exception(message)
  * Blocking microphone loop: 16 kHz mono 16-bit PCM in 100 ms chunks. Run it on a background
  * thread. Audio is only kept in memory (when [SpeechOptions.keepAudio]) and returned to the caller.
  */
-class MicCapture(val sampleRate: Int = SAMPLE_RATE) {
+class MicCapture(
+    val sampleRate: Int = SAMPLE_RATE,
+    /** Model-based speech detection for auto-stop; null = energy only. */
+    private val detector: SpeechDetector? = null,
+) {
 
     /**
      * Records until [shouldStop] returns true or the [SilenceDetector] ends the phrase.
@@ -45,6 +49,7 @@ class MicCapture(val sampleRate: Int = SAMPLE_RATE) {
             throw MicUnavailableException("AudioRecord not initialized")
         }
         val vad = SilenceDetector(options.autoStopMs)
+        detector?.reset()
         val buffer = ShortArray(chunk)
         val kept = if (options.keepAudio) ShortArrayBuilder(sampleRate * 5) else null
         try {
@@ -59,7 +64,7 @@ class MicCapture(val sampleRate: Int = SAMPLE_RATE) {
                 kept?.append(buffer, n)
                 val db = SilenceDetector.dbfs(buffer, n)
                 onChunk(buffer, n, SilenceDetector.level(db))
-                if (vad.feed(db, n * 1000 / sampleRate)) break
+                if (vad.feed(db, n * 1000 / sampleRate, detector?.isSpeech(buffer, n))) break
             }
         } finally {
             runCatching { record.stop() }

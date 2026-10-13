@@ -20,13 +20,16 @@ class SilenceDetector(
     var heardSpeech = false
         private set
 
-    /** Feeds one chunk's loudness in dBFS; returns true when recording should stop. */
-    fun feed(db: Float, chunkMs: Int): Boolean {
+    /**
+     * Feeds one chunk's loudness in dBFS; returns true when recording should stop. [speech] = a
+     * model's verdict for the chunk (overrides the energy threshold), or null to use energy only.
+     */
+    fun feed(db: Float, chunkMs: Int, speech: Boolean? = null): Boolean {
         elapsedMs += chunkMs
         // Start from a quiet floor: the user often speaks in the very first chunk.
         if (noiseDb.isNaN()) noiseDb = minOf(db, INITIAL_NOISE_DB)
         val threshold = max(MIN_SPEECH_DB, noiseDb + SPEECH_MARGIN_DB)
-        if (db > threshold) {
+        if (speech ?: (db > threshold)) {
             heardSpeech = true
             silenceMs = 0
         } else {

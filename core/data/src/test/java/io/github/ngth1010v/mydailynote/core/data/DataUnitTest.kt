@@ -16,6 +16,14 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 
 class TextNormalizerTest {
+    @Test fun snapsVoiceTextToKnownAction() {
+        val known = listOf("Cà phê", "Walk dog", "Call mom")
+        assertEquals("Cà phê", TextNormalizer.closestKnown("ca phe", known))
+        assertEquals("Walk dog", TextNormalizer.closestKnown("walk dogs", known))
+        assertNull(TextNormalizer.closestKnown("call dad", known))
+        assertNull(TextNormalizer.closestKnown("read a long book", known))
+    }
+
     @Test fun stripsVietnameseDiacritics() {
         assertEquals("ca phe khong duong", TextNormalizer.normalize("  Cà  phê KHÔNG đường "))
         assertEquals("di bo", TextNormalizer.normalize("Đi bộ"))

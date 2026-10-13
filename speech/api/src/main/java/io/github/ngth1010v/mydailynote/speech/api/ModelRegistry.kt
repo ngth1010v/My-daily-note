@@ -33,6 +33,17 @@ object ModelRegistry {
             license = "Apache-2.0",
         ),
         ModelSpec(
+            id = "vosk-en-us-0.22-lgraph",
+            kind = ModelKind.VOSK,
+            language = VoiceLanguage.EN,
+            displayName = "Vosk English (US) 0.22 lgraph (more accurate)",
+            url = "https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip",
+            sha256 = "d9838b4aaa82a75c4a17f5aca300eaca129aaab2a7cbf951bafbb500eb9c4334",
+            sizeBytes = 130_557_655,
+            archive = true,
+            license = "Apache-2.0",
+        ),
+        ModelSpec(
             id = "vosk-small-vn-0.4",
             kind = ModelKind.VOSK,
             language = VoiceLanguage.VI,
@@ -104,8 +115,13 @@ object ModelRegistry {
 
     fun get(id: String): ModelSpec? = byId[id]
 
+    /** The default (small) Vosk model for [language]: the one offered for download first. */
     fun vosk(language: VoiceLanguage): ModelSpec =
         all.first { it.kind == ModelKind.VOSK && it.language == language }
+
+    /** Vosk models for [language], most accurate first. */
+    fun voskByAccuracy(language: VoiceLanguage): List<ModelSpec> =
+        all.filter { it.kind == ModelKind.VOSK && it.language == language }.sortedByDescending { it.sizeBytes }
 
     val whisper: List<ModelSpec> get() = all.filter { it.kind == ModelKind.WHISPER }
 }

@@ -4,9 +4,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.ngth1010v.mydailynote.speech.api.ModelRegistry
 import io.github.ngth1010v.mydailynote.speech.api.VoiceLanguage
+import io.github.ngth1010v.mydailynote.speech.whisper.SileroVad
 import io.github.ngth1010v.mydailynote.speech.whisper.WhisperRefiner
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -71,7 +74,7 @@ class SpeechOnDeviceTest {
         val pcm = audio()
         val id = ModelRegistry.whisper.firstOrNull { container.models.isInstalled(it.id) }?.id
         assumeTrue("no Whisper model installed", id != null)
-        val refiner = WhisperRefiner(container.models)
+        val refiner = WhisperRefiner(container.models, context)
         assertTrue("native whisper library failed to load", refiner.isAvailable(id!!))
         val t0 = System.currentTimeMillis()
         refiner.prepare(id)
@@ -79,5 +82,28 @@ class SpeechOnDeviceTest {
         val text = refiner.refine(pcm, VoiceLanguage.EN, id).orEmpty().lowercase()
         println("WHISPER ($id, load ${t1 - t0} ms, transcribe ${System.currentTimeMillis() - t1} ms): $text")
         assertTrue("got '$text'", "water" in text && "dog" in text)
+    }
+
+    @Test
+    fun sileroVadSeparatesSpeechFromSilence() {
+        val vad = SileroVad(context)
+        fun anySpeech(pcm: ShortArray): Boolean {
+            vad.reset()
+            return pcm.toList().chunked(1600).any { vad.isSpeech(it.toShortArray(), it.size) == true }
+        }
+        assertTrue("no speech found in the test clip", anySpeech(audio()))
+        assertFalse("speech found in silence", anySpeech(ShortArray(16_000 * 2)))
+    }
+
+    @Test
+    fun whisperAutoLanguageMatchesExplicitEnglish() = runBlocking {
+        val pcm = audio()
+        val id = ModelRegistry.whisper.firstOrNull { container.models.isInstalled(it.id) }?.id
+        assumeTrue("no Whisper model installed", id != null)
+        val refiner = WhisperRefiner(container.models, context)
+        val explicit = refiner.refine(pcm, VoiceLanguage.EN, id!!)
+        val auto = refiner.refine(pcm, VoiceLanguage.VI, id, autoLanguage = true)
+        println("WHISPER explicit: $explicit / auto: $auto")
+        assertEquals(explicit?.lowercase()?.filter { it.isLetter() }, auto?.lowercase()?.filter { it.isLetter() })
     }
 }

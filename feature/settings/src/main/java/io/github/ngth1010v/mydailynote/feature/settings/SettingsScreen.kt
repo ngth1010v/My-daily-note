@@ -285,7 +285,8 @@ private fun LazyListScope.voice(vm: SettingsViewModel, s: AppSettings, onModels:
         ChoicePref(
             stringResource(R.string.pref_voice_language),
             listOf<Pair<String?, String>>(null to stringResource(R.string.voice_lang_follow)) +
-                VoiceLanguage.entries.map { it.tag to languageName(it) },
+                VoiceLanguage.entries.map { it.tag to languageName(it) } +
+                (VoiceLanguage.AUTO_TAG to stringResource(R.string.voice_lang_auto)),
             s.voiceLanguage,
         ) { v -> vm.update { it.copy(voiceLanguage = v) } }
     }

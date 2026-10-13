@@ -14,6 +14,7 @@ import io.github.ngth1010v.mydailynote.core.data.EntryRepository
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
 import io.github.ngth1010v.mydailynote.core.data.model.EntrySource
 import io.github.ngth1010v.mydailynote.core.data.model.Suggestion
+import io.github.ngth1010v.mydailynote.core.data.model.TextNormalizer
 import io.github.ngth1010v.mydailynote.core.data.model.day
 import io.github.ngth1010v.mydailynote.core.data.settings.AppSettings
 import io.github.ngth1010v.mydailynote.core.data.settings.SettingsRepository
@@ -210,20 +211,25 @@ class HomeViewModel(
         mode = InputMode.Voice(VoicePhase.LISTENING)
         voiceJob = viewModelScope.launch {
             var finished = false
-            pipeline.start(s.speechEngine, lang, s.autoStopMs, refineModel(s)).collect { e ->
+            // The user's most frequent actions: primes Whisper's spelling and lets results snap to them.
+            val known = entries.suggestions("", KNOWN_TEXTS).first().map { it.text }
+            val prompt = known.take(PROMPT_TEXTS).joinToString(", ").ifEmpty { null }
+            fun snap(heard: String) = TextNormalizer.closestKnown(heard, known) ?: heard
+            val auto = s.voiceLanguage == VoiceLanguage.AUTO_TAG
+            pipeline.start(s.speechEngine, lang, s.autoStopMs, refineModel(s), prompt, auto).collect { e ->
                 when (e) {
                     SpeechEvent.Listening -> {}
                     is SpeechEvent.Level -> level = e.level
                     is SpeechEvent.Partial -> partial = e.text
                     is SpeechEvent.Final -> {
                         finished = true
-                        text = e.text
+                        text = snap(e.text)
                         partial = ""
                         level = 0f
                         mode = InputMode.Voice(VoicePhase.DONE)
                     }
                     SpeechEvent.Refining -> mode = InputMode.Voice(VoicePhase.REFINING)
-                    is SpeechEvent.Refined -> text = e.text
+                    is SpeechEvent.Refined -> text = snap(e.text)
                     is SpeechEvent.Error -> {
                         finished = true
                         level = 0f
@@ -354,3 +360,9 @@ class HomeViewModel(
         cancelVoice()
     }
 }
+
+/** Frequent past actions a voice result may snap to. */
+private const val KNOWN_TEXTS = 200
+
+/** How many of them go into Whisper's prompt (it only reads ~220 tokens). */
+private const val PROMPT_TEXTS = 30

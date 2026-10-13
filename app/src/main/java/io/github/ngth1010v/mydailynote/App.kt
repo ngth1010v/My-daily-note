@@ -7,10 +7,12 @@ import io.github.ngth1010v.mydailynote.core.data.EntryRepository
 import io.github.ngth1010v.mydailynote.core.data.backup.BackupRepository
 import io.github.ngth1010v.mydailynote.core.data.db.AppDatabase
 import io.github.ngth1010v.mydailynote.core.data.settings.SettingsRepository
+import io.github.ngth1010v.mydailynote.speech.api.MicCapture
 import io.github.ngth1010v.mydailynote.speech.api.ModelManager
 import io.github.ngth1010v.mydailynote.speech.api.PlatformSpeechEngine
 import io.github.ngth1010v.mydailynote.speech.api.VoicePipeline
 import io.github.ngth1010v.mydailynote.speech.vosk.VoskEngine
+import io.github.ngth1010v.mydailynote.speech.whisper.SileroVad
 import io.github.ngth1010v.mydailynote.speech.whisper.WhisperRefiner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,8 +35,8 @@ class AppContainer(private val context: Context) {
     val models by lazy { ModelManager(context, appScope) }
     val voice by lazy {
         VoicePipeline(
-            engines = listOf(VoskEngine(models), PlatformSpeechEngine(context)),
-            refiner = WhisperRefiner(models),
+            engines = listOf(VoskEngine(models, MicCapture(detector = SileroVad(context))), PlatformSpeechEngine(context)),
+            refiner = WhisperRefiner(models, context),
         )
     }
 

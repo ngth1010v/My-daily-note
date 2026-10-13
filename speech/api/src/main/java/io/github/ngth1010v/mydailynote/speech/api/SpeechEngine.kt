@@ -8,6 +8,9 @@ enum class VoiceLanguage(val tag: String) {
     VI("vi");
 
     companion object {
+        /** Settings value for "detect English or Vietnamese per clip" (refiner only; live engine uses the app language). */
+        const val AUTO_TAG = "auto"
+
         fun fromTag(tag: String?): VoiceLanguage? =
             entries.firstOrNull { tag != null && tag.startsWith(it.tag, ignoreCase = true) }
     }
@@ -78,6 +81,24 @@ interface SpeechRefiner {
 
     suspend fun prepare(modelId: String) {}
 
-    /** Returns the improved text, or null to keep the streaming result. */
-    suspend fun refine(audio: ShortArray, language: VoiceLanguage, modelId: String): String?
+    /**
+     * Returns the improved text, or null to keep the streaming result. [prompt] = words the user
+     * often says (biases spelling); [autoLanguage] = pick English or Vietnamese from the audio.
+     */
+    suspend fun refine(
+        audio: ShortArray,
+        language: VoiceLanguage,
+        modelId: String,
+        prompt: String? = null,
+        autoLanguage: Boolean = false,
+    ): String?
+}
+
+/** Speech/no-speech decision for one mic chunk (e.g. Silero VAD). */
+interface SpeechDetector {
+    /** Call before each recording. */
+    fun reset()
+
+    /** True if the chunk contains speech; null if the detector is unavailable (energy fallback). */
+    fun isSpeech(chunk: ShortArray, count: Int): Boolean?
 }
