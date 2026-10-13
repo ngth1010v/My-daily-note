@@ -76,6 +76,9 @@
     <string name="model_failed_storage">Không đủ dung lượng lưu trữ.</string>
     <string name="model_failed_invalid">Tệp này không phải mô hình hợp lệ cho mục này.</string>
     <string name="model_delete">Xóa</string>
+    <string name="model_large_title">Tải %1$s?</string>
+    <string name="model_large_body">Đây là bản tải lớn (%1$s). Nên dùng Wi-Fi. Mô hình lớn chính xác hơn nhưng chậm hơn và tốn bộ nhớ hơn. Bạn có thể xóa sau trong Cài đặt.</string>
+    <string name="model_large_not_now">Để sau</string>
     <string name="model_import_hint">Mô hình Vosk là tệp .zip, mô hình Whisper là tệp ggml .bin.</string>
 
     <!-- Settings -->

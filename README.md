@@ -43,6 +43,7 @@ You can also import model files manually in *Settings → Voice models* for devi
 | Vosk small English 0.15 | live recognition | 41 MB | Apache-2.0 |
 | Vosk small Vietnamese 0.4 | live recognition | 34 MB | Apache-2.0 |
 | Whisper tiny / base (q5_1) | high-accuracy pass (optional) | 32 / 60 MB | MIT |
+| Whisper small (q5_1) / medium (q5_0) / large-v3 turbo (q5_0) | higher accuracy, optional large download (asks first) | 190 / 539 / 574 MB | MIT |
 
 Every download is verified against a SHA-256 checksum.
 

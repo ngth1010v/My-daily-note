@@ -80,6 +80,9 @@
     <string name="model_failed_storage">Not enough storage space.</string>
     <string name="model_failed_invalid">That file isn\'t a valid model for this slot.</string>
     <string name="model_delete">Delete</string>
+    <string name="model_large_title">Download %1$s?</string>
+    <string name="model_large_body">This is a large download (%1$s). Wi-Fi is recommended. Bigger models are more accurate but slower and use more memory. You can delete it later in Settings.</string>
+    <string name="model_large_not_now">Not now</string>
     <string name="model_import_hint">Vosk models are .zip files, Whisper models are ggml .bin files.</string>
 
     <!-- Settings -->

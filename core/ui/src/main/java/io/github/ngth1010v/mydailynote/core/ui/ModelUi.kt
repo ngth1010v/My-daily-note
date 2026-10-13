@@ -6,12 +6,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -20,6 +25,9 @@ import androidx.compose.ui.unit.dp
 import io.github.ngth1010v.mydailynote.speech.api.ModelSpec
 import io.github.ngth1010v.mydailynote.speech.api.ModelState
 import io.github.ngth1010v.mydailynote.speech.api.VoiceLanguage
+
+/** Downloads above this size ask for confirmation first. */
+private const val LARGE_MODEL_BYTES = 100L * 1024 * 1024
 
 @Composable
 fun formatBytes(bytes: Long): String = Formatter.formatShortFileSize(LocalContext.current, bytes)
@@ -59,6 +67,22 @@ fun ModelRow(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var confirmLarge by rememberSaveable { mutableStateOf(false) }
+    if (confirmLarge) {
+        AlertDialog(
+            onDismissRequest = { confirmLarge = false },
+            title = { Text(stringResource(R.string.model_large_title, spec.displayName)) },
+            text = { Text(stringResource(R.string.model_large_body, formatBytes(spec.sizeBytes))) },
+            confirmButton = {
+                TextButton(onClick = { confirmLarge = false; onDownload() }) {
+                    Text(stringResource(R.string.model_download))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmLarge = false }) { Text(stringResource(R.string.model_large_not_now)) }
+            },
+        )
+    }
     Column(modifier.fillMaxWidth().padding(vertical = 8.dp)) {
         Text(spec.displayName, style = MaterialTheme.typography.bodyLarge)
         Text(
@@ -85,7 +109,9 @@ fun ModelRow(
                 is ModelState.Installed -> TextButton(onClick = onDelete) { Text(stringResource(R.string.model_delete)) }
                 else -> {
                     TextButton(onClick = onImport) { Text(stringResource(R.string.model_import)) }
-                    OutlinedButton(onClick = onDownload) { Text(stringResource(R.string.model_download)) }
+                    OutlinedButton(onClick = {
+                        if (spec.sizeBytes > LARGE_MODEL_BYTES) confirmLarge = true else onDownload()
+                    }) { Text(stringResource(R.string.model_download)) }
                 }
             }
         }
