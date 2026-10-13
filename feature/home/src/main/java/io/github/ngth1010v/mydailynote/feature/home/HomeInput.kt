@@ -152,7 +152,7 @@ fun ColumnScope.HomeRailActions(controller: HomeController) {
         is InputMode.Voice -> when (mode.phase) {
             VoicePhase.LISTENING -> {
                 RailButton(Icons.Filled.Close, stringResource(R.string.action_cancel), onClick = vm::cancelInput)
-                RailButton(Icons.Filled.Stop, stringResource(R.string.action_stop), onClick = vm::stopVoice, emphasized = true, level = vm.level)
+                RailButton(Icons.Filled.Stop, stringResource(R.string.action_stop), onClick = vm::stopVoice, emphasized = true, level = { vm.level })
             }
             VoicePhase.REFINING, VoicePhase.DONE -> {
                 RailButton(Icons.Filled.Check, stringResource(R.string.action_save), onClick = vm::save, emphasized = true, enabled = vm.text.isNotBlank())

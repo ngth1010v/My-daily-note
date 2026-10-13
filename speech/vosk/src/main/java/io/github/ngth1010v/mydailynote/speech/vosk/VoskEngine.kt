@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -79,22 +80,42 @@ class VoskEngine(
         try {
             send(SpeechEvent.Listening)
             val committed = StringBuilder()
-            var lastPartial = ""
+            // Capture and decoding run on separate threads: decoding is sometimes slower than real
+            // time (end of an utterance, a busy CPU), and doing it inside the mic loop stalled reads,
+            // so audio was dropped and the live text fell further and further behind.
+            val chunks = Channel<ShortArray>(Channel.UNLIMITED)
+            val decoder = launch(Dispatchers.Default) {
+                var lastPartial = ""
+                var next = chunks.receiveCatching().getOrNull()
+                while (next != null) {
+                    if (recognizer.acceptWaveForm(next, next.size)) {
+                        committed.appendWords(recognizer.result.field("text"))
+                    }
+                    next = chunks.tryReceive().getOrNull()
+                    if (next == null) {
+                        // Caught up: only now compute the (costly) partial result, once per batch.
+                        val partial = join(committed, recognizer.partialResult.field("partial"))
+                        if (partial != lastPartial) {
+                            lastPartial = partial
+                            send(SpeechEvent.Partial(partial))
+                        }
+                        next = chunks.receiveCatching().getOrNull()
+                    }
+                }
+            }
             val audio = try {
                 mic.record(options, shouldStop = { stopRequested || isClosedForSend }) { buf, n, level ->
                     trySend(SpeechEvent.Level(level))
-                    if (recognizer.acceptWaveForm(buf, n)) {
-                        committed.appendWords(recognizer.result.field("text"))
-                        lastPartial = committed.toString()
-                    } else {
-                        lastPartial = join(committed, recognizer.partialResult.field("partial"))
-                    }
-                    trySend(SpeechEvent.Partial(lastPartial))
+                    chunks.trySend(buf.copyOf(n))
                 }
             } catch (e: MicUnavailableException) {
+                decoder.cancel()
                 send(SpeechEvent.Error(SpeechError.AUDIO))
                 return@channelFlow
+            } finally {
+                chunks.close()
             }
+            decoder.join()
             committed.appendWords(recognizer.finalResult.field("text"))
             val text = committed.toString()
             send(if (text.isBlank()) SpeechEvent.Error(SpeechError.NO_MATCH) else SpeechEvent.Final(text, audio))

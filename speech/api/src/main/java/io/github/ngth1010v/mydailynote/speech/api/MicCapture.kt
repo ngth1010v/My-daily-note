@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.os.Process
 import androidx.annotation.RequiresPermission
 import kotlin.math.max
 
@@ -52,6 +53,10 @@ class MicCapture(
         detector?.reset()
         val buffer = ShortArray(chunk)
         val kept = if (options.keepAudio) ShortArrayBuilder(sampleRate * 5) else null
+        // Pooled thread: raise it to audio priority only while recording, so UI and decoding can't starve reads.
+        val tid = Process.myTid()
+        val priority = Process.getThreadPriority(tid)
+        runCatching { Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO) }
         try {
             record.startRecording()
             if (record.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
@@ -69,6 +74,7 @@ class MicCapture(
         } finally {
             runCatching { record.stop() }
             record.release()
+            runCatching { Process.setThreadPriority(tid, priority) }
         }
         return kept?.toArray()
     }

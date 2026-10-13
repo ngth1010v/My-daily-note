@@ -15,7 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -41,7 +41,7 @@ fun RailButton(
     selected: Boolean = false,
     emphasized: Boolean = false,
     enabled: Boolean = true,
-    level: Float = 0f,
+    level: (() -> Float)? = null,
     onLongClick: (() -> Unit)? = null,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -56,7 +56,12 @@ fun RailButton(
     Box(
         modifier
             .size(RailButtonSize)
-            .scale(1f + level.coerceIn(0f, 1f) * 0.15f)
+            // Read in the draw phase: the level changes 10x a second and must not recompose the rail.
+            .graphicsLayer {
+                val scale = 1f + (level?.invoke() ?: 0f).coerceIn(0f, 1f) * 0.15f
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(CircleShape)
             .background(bg)
             .combinedClickable(
