@@ -182,6 +182,7 @@ fun HomeScreen(
         }
         onLaunchHandled()
     }
+    BackHandler(enabled = vm.detail != null) { vm.detail = null }
     BackHandler(enabled = vm.mode != InputMode.Idle) { vm.cancelInput() }
     BackHandler(enabled = vm.searchOpen && vm.mode == InputMode.Idle) { vm.closeSearch() }
 
@@ -190,11 +191,12 @@ fun HomeScreen(
     val endPad = railPadding.calculateEndPadding(layoutDirection)
 
     val onEntryAction: (EntryEditor) -> Unit = { editor = it }
+    val onOpen: (Entry) -> Unit = { vm.detail = it }
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (vm.searchOpen) {
-                    SearchContent(vm, formatters, settings.defaultColor, dark, onEntryAction)
+                    SearchContent(vm, formatters, settings.defaultColor, dark, onEntryAction, onOpen)
                 } else {
                     val empty = items.loadState.refresh is LoadState.NotLoading && items.itemCount == 0
                     // Only lay the list out once rows exist: measuring it empty would clamp the saved
@@ -214,7 +216,7 @@ fun HomeScreen(
                             contentType = items.itemContentType { if (it is HomeItem.Row) 0 else 1 },
                         ) { index ->
                             when (val item = items[index]) {
-                                is HomeItem.Row -> EntryRow(item.entry, formatters, settings.defaultColor, dark, onEntryAction, vm::delete)
+                                is HomeItem.Row -> EntryRow(item.entry, formatters, settings.defaultColor, dark, onEntryAction, onOpen, vm::delete)
                                 is HomeItem.Header -> DayHeader(formatters.day(item.day, today))
                                 null -> Spacer(Modifier.height(40.dp))
                             }
@@ -260,6 +262,14 @@ fun HomeScreen(
             controller.snackbar,
             Modifier.align(Alignment.BottomCenter).padding(start = startPad, end = endPad, bottom = 8.dp),
         )
+        vm.detail?.let { entry ->
+            EntryDetailScreen(
+                entry, formatters, settings.defaultColor, dark,
+                onSave = vm::update,
+                onDelete = vm::delete,
+                onClose = { vm.detail = null },
+            )
+        }
     }
 
     EntryEditorHost(
@@ -283,10 +293,10 @@ private fun EntryRow(
     defaultColor: String,
     dark: Boolean,
     onEditor: (EntryEditor) -> Unit,
+    onOpen: (Entry) -> Unit,
     onDelete: (Entry) -> Unit,
     showDate: Boolean = false,
 ) {
-    var expanded by rememberSaveable(entry.id) { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
     val local = entry.achievedAt.atOffset(entry.zoneOffset)
     Box {
@@ -294,7 +304,7 @@ private fun EntryRow(
             Modifier
                 .fillMaxWidth()
                 .combinedClickable(
-                    onClick = { expanded = !expanded },
+                    onClick = { onOpen(entry) },
                     onLongClick = { menu = true },
                 )
                 .padding(vertical = 8.dp)
@@ -313,10 +323,10 @@ private fun EntryRow(
                     Text(
                         entry.text,
                         style = MaterialTheme.typography.bodyLarge,
-                        maxLines = if (expanded) Int.MAX_VALUE else 2,
+                        maxLines = 2,
                         modifier = Modifier.weight(1f, fill = false),
                     )
-                    if (expanded && entry.source == EntrySource.VOICE) {
+                    if (entry.source == EntrySource.VOICE) {
                         Icon(
                             Icons.Filled.Mic, stringResource(R.string.voice_source),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -329,9 +339,10 @@ private fun EntryRow(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (expanded && !entry.description.isNullOrBlank()) {
+                if (!entry.description.isNullOrBlank()) {
                     Text(
                         entry.description.orEmpty(),
+                        maxLines = 1,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 2.dp),
@@ -397,6 +408,7 @@ private fun SearchContent(
     defaultColor: String,
     dark: Boolean,
     onEditor: (EntryEditor) -> Unit,
+    onOpen: (Entry) -> Unit,
 ) {
     val results by vm.searchResults.collectAsStateWithLifecycle()
     val focus = remember { FocusRequester() }
@@ -432,7 +444,7 @@ private fun SearchContent(
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             items(results, key = { it.id }) { entry ->
-                EntryRow(entry, formatters, defaultColor, dark, onEditor, vm::delete, showDate = true)
+                EntryRow(entry, formatters, defaultColor, dark, onEditor, onOpen, vm::delete, showDate = true)
             }
         }
     }

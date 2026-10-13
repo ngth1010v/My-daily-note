@@ -166,6 +166,9 @@ fun ColumnScope.HomeRailActions(controller: HomeController) {
 /** True while Home is taking input; the app hides the route buttons then. */
 val HomeController.isCapturing: Boolean get() = vm.mode != InputMode.Idle
 
+/** True while the entry edit sub screen is open; the app hides the whole rail then. */
+val HomeController.isEditing: Boolean get() = vm.detail != null
+
 /** Bottom panel: text field with suggestions, or the live voice transcript. */
 @Composable
 internal fun InputPanel(vm: HomeViewModel, defaultColor: String, dark: Boolean, modifier: Modifier = Modifier) {

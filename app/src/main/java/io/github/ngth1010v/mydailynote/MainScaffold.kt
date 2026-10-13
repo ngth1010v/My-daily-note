@@ -63,6 +63,7 @@ import io.github.ngth1010v.mydailynote.feature.home.HomeRailActions
 import io.github.ngth1010v.mydailynote.feature.home.HomeScreen
 import io.github.ngth1010v.mydailynote.feature.home.HomeViewModel
 import io.github.ngth1010v.mydailynote.feature.home.isCapturing
+import io.github.ngth1010v.mydailynote.feature.home.isEditing
 import io.github.ngth1010v.mydailynote.feature.home.rememberHomeController
 import io.github.ngth1010v.mydailynote.feature.settings.AppInfo
 import io.github.ngth1010v.mydailynote.feature.settings.SettingsScreen
@@ -123,7 +124,7 @@ fun MainScaffold(
         HorizontalPager(
             state = pager,
             // While typing or recording, horizontal drags belong to the input, not the pager.
-            userScrollEnabled = !home.isCapturing,
+            userScrollEnabled = !home.isCapturing && !home.isEditing,
             key = { it },
             modifier = Modifier.fillMaxSize(),
         ) { page ->
@@ -150,12 +151,18 @@ fun MainScaffold(
             }
         }
 
+        AnimatedVisibility(
+            visible = !(route == Route.HOME && home.isEditing),
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(if (railAtEnd) Alignment.BottomEnd else Alignment.BottomStart),
+        ) {
         Surface(
             shape = RoundedCornerShape(32.dp),
             color = MaterialTheme.colorScheme.surfaceContainer,
             tonalElevation = 3.dp,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            modifier = Modifier.align(if (railAtEnd) Alignment.BottomEnd else Alignment.BottomStart).padding(8.dp),
+            modifier = Modifier.padding(8.dp),
         ) {
             Column(
                 Modifier.padding(8.dp).animateContentSize(),
@@ -207,6 +214,7 @@ fun MainScaffold(
                     }
                 }
             }
+        }
         }
     }
 }

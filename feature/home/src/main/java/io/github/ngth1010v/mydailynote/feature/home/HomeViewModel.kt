@@ -137,6 +137,9 @@ class HomeViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Entry open in the full-screen edit sub screen, or null. */
+    var detail by mutableStateOf<Entry?>(null)
+
     var searchOpen by mutableStateOf(false)
         private set
     var query by mutableStateOf("")
