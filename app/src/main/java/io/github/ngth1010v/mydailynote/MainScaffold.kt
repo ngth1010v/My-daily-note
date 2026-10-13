@@ -1,6 +1,13 @@
 package io.github.ngth1010v.mydailynote
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,11 +15,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -26,10 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -37,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,6 +55,8 @@ import io.github.ngth1010v.mydailynote.core.data.settings.AppSettings
 import io.github.ngth1010v.mydailynote.core.data.settings.RailSide
 import io.github.ngth1010v.mydailynote.core.ui.R
 import io.github.ngth1010v.mydailynote.core.ui.RailButton
+import io.github.ngth1010v.mydailynote.core.ui.RailButtonGap
+import io.github.ngth1010v.mydailynote.core.ui.RailButtonSize
 import io.github.ngth1010v.mydailynote.core.ui.RailReservedWidth
 import io.github.ngth1010v.mydailynote.feature.home.HomeLaunch
 import io.github.ngth1010v.mydailynote.feature.home.HomeRailActions
@@ -57,6 +68,8 @@ import io.github.ngth1010v.mydailynote.feature.settings.AppInfo
 import io.github.ngth1010v.mydailynote.feature.settings.SettingsScreen
 import io.github.ngth1010v.mydailynote.feature.settings.SettingsViewModel
 import io.github.ngth1010v.mydailynote.speech.api.PlatformSpeechEngine
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 enum class Route(val label: Int, val icon: ImageVector) {
     HOME(R.string.nav_home, Icons.Filled.Home),
@@ -75,9 +88,13 @@ fun MainScaffold(
     launch: HomeLaunch?,
     onLaunchHandled: () -> Unit,
 ) {
-    var route by rememberSaveable { mutableStateOf(Route.HOME) }
-    LaunchedEffect(launch) { if (launch != null) route = Route.HOME }
-    BackHandler(enabled = route != Route.HOME) { route = Route.HOME }
+    // One pager page per route, in rail order; swiping left/right switches screens.
+    val pager = rememberPagerState { Route.entries.size }
+    val scope = rememberCoroutineScope()
+    val route = Route.entries[pager.currentPage]
+    val go: (Route) -> Unit = { r -> scope.launch { pager.animateScrollToPage(r.ordinal) } }
+    LaunchedEffect(launch) { if (launch != null) pager.scrollToPage(Route.HOME.ordinal) }
+    BackHandler(enabled = route != Route.HOME) { go(Route.HOME) }
 
     val homeVm: HomeViewModel = viewModel(factory = viewModelFactory {
         initializer {
@@ -93,7 +110,8 @@ fun MainScaffold(
         RailSide.LEFT -> !ltr
         RailSide.FOLLOW_LAYOUT -> true
     }
-    val contentPadding = if (railAtEnd) PaddingValues(end = RailReservedWidth) else PaddingValues(start = RailReservedWidth)
+    // Screens are full width; only Home's bottom input panel and snackbar keep clear of the rail.
+    val railPadding = if (railAtEnd) PaddingValues(end = RailReservedWidth) else PaddingValues(start = RailReservedWidth)
 
     Box(
         Modifier
@@ -102,25 +120,33 @@ fun MainScaffold(
             // Includes the keyboard, so the rail and input panel move above it.
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
-        when (route) {
-            Route.HOME -> HomeScreen(home, contentPadding, launch, onLaunchHandled)
-            Route.GROUP -> ComingSoon(Route.GROUP, R.string.group_placeholder_body, contentPadding)
-            Route.ANALYSIS -> ComingSoon(Route.ANALYSIS, R.string.analysis_placeholder_body, contentPadding)
-            Route.SETTINGS -> {
-                val context = LocalContext.current
-                val vm: SettingsViewModel = viewModel(factory = viewModelFactory {
-                    initializer {
-                        SettingsViewModel(
-                            settingsRepo = container.settings,
-                            entries = container.entries,
-                            backup = container.backup,
-                            models = container.models,
-                            appInfo = AppInfo(BuildConfig.VERSION_NAME, "https://github.com/$REPO_SLUG", REPO_SLUG),
-                            androidEngineAvailable = PlatformSpeechEngine.isSupported(context),
-                        )
-                    }
-                })
-                SettingsScreen(vm, contentPadding)
+        HorizontalPager(
+            state = pager,
+            // While typing or recording, horizontal drags belong to the input, not the pager.
+            userScrollEnabled = !home.isCapturing,
+            key = { it },
+            modifier = Modifier.fillMaxSize(),
+        ) { page ->
+            when (Route.entries[page]) {
+                Route.HOME -> HomeScreen(home, railPadding, launch, onLaunchHandled)
+                Route.GROUP -> ComingSoon(Route.GROUP, R.string.group_placeholder_body)
+                Route.ANALYSIS -> ComingSoon(Route.ANALYSIS, R.string.analysis_placeholder_body)
+                Route.SETTINGS -> {
+                    val context = LocalContext.current
+                    val vm: SettingsViewModel = viewModel(factory = viewModelFactory {
+                        initializer {
+                            SettingsViewModel(
+                                settingsRepo = container.settings,
+                                entries = container.entries,
+                                backup = container.backup,
+                                models = container.models,
+                                appInfo = AppInfo(BuildConfig.VERSION_NAME, "https://github.com/$REPO_SLUG", REPO_SLUG),
+                                androidEngineAvailable = PlatformSpeechEngine.isSupported(context),
+                            )
+                        }
+                    })
+                    SettingsScreen(vm)
+                }
             }
         }
 
@@ -128,27 +154,56 @@ fun MainScaffold(
             shape = RoundedCornerShape(32.dp),
             color = MaterialTheme.colorScheme.surfaceContainer,
             tonalElevation = 3.dp,
-            shadowElevation = 6.dp,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             modifier = Modifier.align(if (railAtEnd) Alignment.BottomEnd else Alignment.BottomStart).padding(8.dp),
         ) {
             Column(
-                Modifier.padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                Modifier.padding(8.dp).animateContentSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 val capturing = route == Route.HOME && home.isCapturing
-                if (route == Route.HOME) {
-                    HomeRailActions(home)
-                    if (!capturing) HorizontalDivider(Modifier.width(32.dp))
+                AnimatedVisibility(
+                    visible = route == Route.HOME,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    Column(
+                        Modifier.padding(bottom = if (capturing) 0.dp else RailButtonGap),
+                        verticalArrangement = Arrangement.spacedBy(RailButtonGap),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        HomeRailActions(home)
+                        if (!capturing) HorizontalDivider(Modifier.width(24.dp))
+                    }
                 }
-                if (!capturing) {
-                    Route.entries.forEach { r ->
-                        RailButton(
-                            icon = r.icon,
-                            label = stringResource(r.label),
-                            selected = r == route,
-                            onClick = { route = r },
+                AnimatedVisibility(
+                    visible = !capturing,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    Box {
+                        // Selection pill: follows the pager, so it slides along with a swipe.
+                        val indicator = MaterialTheme.colorScheme.secondaryContainer
+                        Box(
+                            Modifier
+                                .offset {
+                                    val position = (pager.currentPage + pager.currentPageOffsetFraction)
+                                        .coerceIn(0f, Route.entries.lastIndex.toFloat())
+                                    IntOffset(0, (position * (RailButtonSize + RailButtonGap).toPx()).roundToInt())
+                                }
+                                .size(RailButtonSize)
+                                .background(indicator, CircleShape)
                         )
+                        Column(verticalArrangement = Arrangement.spacedBy(RailButtonGap)) {
+                            Route.entries.forEach { r ->
+                                RailButton(
+                                    icon = r.icon,
+                                    label = stringResource(r.label),
+                                    selected = r.ordinal == pager.targetPage,
+                                    onClick = { go(r) },
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -157,9 +212,9 @@ fun MainScaffold(
 }
 
 @Composable
-private fun ComingSoon(route: Route, body: Int, contentPadding: PaddingValues) {
+private fun ComingSoon(route: Route, body: Int) {
     Column(
-        Modifier.fillMaxSize().padding(contentPadding).padding(32.dp),
+        Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

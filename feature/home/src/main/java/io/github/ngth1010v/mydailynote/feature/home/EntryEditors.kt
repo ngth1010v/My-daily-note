@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
@@ -50,6 +51,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
 import io.github.ngth1010v.mydailynote.core.ui.EntryIcons
+import io.github.ngth1010v.mydailynote.core.ui.ColorGrid
 import io.github.ngth1010v.mydailynote.core.ui.EntryPalette
 import io.github.ngth1010v.mydailynote.core.ui.R
 import java.time.Instant
@@ -184,17 +186,16 @@ private fun StyleSheet(entry: Entry, defaultColor: String, dark: Boolean, onChan
         ) {
             Text(stringResource(R.string.color_icon_title), style = MaterialTheme.typography.titleLarge)
             Text(stringResource(R.string.color_label), style = MaterialTheme.typography.labelLarge)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Swatch(
                     fill = EntryPalette.color(null, defaultColor, dark),
                     selected = color == null,
                     label = stringResource(R.string.color_default),
                     outlined = true,
                 ) { color = null; push() }
-                EntryPalette.swatches.forEach { s ->
-                    Swatch(if (dark) s.dark else s.light, selected = color == s.key, label = s.key) { color = s.key; push() }
-                }
+                Text(stringResource(R.string.color_default), style = MaterialTheme.typography.bodyMedium)
             }
+            ColorGrid(color, dark, onSelect = { color = it; push() })
             Text(stringResource(R.string.icon_label), style = MaterialTheme.typography.labelLarge)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 IconChoice(selected = icon == null, onClick = { icon = null; push() }) {
@@ -218,12 +219,13 @@ private fun Swatch(
     outlined: Boolean = false,
     onClick: () -> Unit,
 ) {
+    val shape = RoundedCornerShape(8.dp)
     Box(
         Modifier
             .size(36.dp)
-            .clip(CircleShape)
+            .clip(shape)
             .background(fill)
-            .then(if (outlined) Modifier.border(2.dp, MaterialTheme.colorScheme.outline, CircleShape) else Modifier)
+            .then(if (outlined) Modifier.border(2.dp, MaterialTheme.colorScheme.outline, shape) else Modifier)
             .semantics { contentDescription = label; this.selected = selected }
             .clickable(onClickLabel = label, onClick = onClick),
         contentAlignment = Alignment.Center,
