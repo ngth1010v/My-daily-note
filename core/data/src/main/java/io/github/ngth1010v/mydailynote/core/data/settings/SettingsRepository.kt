@@ -22,7 +22,6 @@ class SettingsRepository(context: Context) {
         val railSide = stringPreferencesKey("rail_side")
         val dayStartHour = intPreferencesKey("day_start_hour")
         val timeFormat = stringPreferencesKey("time_format")
-        val defaultColor = stringPreferencesKey("default_color")
         val autoBackup = booleanPreferencesKey("auto_backup")
         val updateCheck = booleanPreferencesKey("update_check")
     }
@@ -38,7 +37,6 @@ class SettingsRepository(context: Context) {
             prefs[Keys.railSide] = s.railSide.name
             prefs[Keys.dayStartHour] = s.dayStartHour.coerceIn(0, 23)
             prefs[Keys.timeFormat] = s.timeFormat.name
-            prefs[Keys.defaultColor] = s.defaultColor
             prefs[Keys.autoBackup] = s.autoBackup
             prefs[Keys.updateCheck] = s.updateCheck
         }
@@ -51,7 +49,6 @@ class SettingsRepository(context: Context) {
             railSide = enumOr(this[Keys.railSide], d.railSide),
             dayStartHour = this[Keys.dayStartHour] ?: d.dayStartHour,
             timeFormat = enumOr(this[Keys.timeFormat], d.timeFormat),
-            defaultColor = this[Keys.defaultColor] ?: d.defaultColor,
             autoBackup = this[Keys.autoBackup] ?: d.autoBackup,
             updateCheck = this[Keys.updateCheck] ?: d.updateCheck,
         )

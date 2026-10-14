@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * Entry colors are stored as palette keys (not ARGB). Unknown keys (e.g. from a newer backup) fall
- * back to the default color.
+ * back to teal.
  */
 object EntryPalette {
     data class Swatch(val key: String, val color: Color)
@@ -60,6 +60,5 @@ object EntryPalette {
     }
     private val byKey = swatches.associateBy { it.key }
 
-    fun color(key: String?, fallbackKey: String): Color =
-        (byKey[key] ?: byKey[fallbackKey] ?: legacy.getValue("teal")).color
+    fun color(key: String?): Color = (byKey[key] ?: legacy.getValue("teal")).color
 }

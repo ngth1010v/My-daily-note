@@ -17,7 +17,10 @@ Fully offline. English and Tiếng Việt.
 - **Quick capture**: a floating navigation rail with *Add action* (✎), always in thumb reach.
 - **History by day**: chat-style list (newest at the bottom, scroll up for the past), sticky day labels and a "day starts at" setting for night owls.
   Windowed loading (Paging 3 + LazyColumn), so it stays smooth with years of entries.
-- **Per-action color & icon** (~200 icons in groups: food, health, sport, work, home, …); tap a row to edit text, description, time, color and icon; delete with undo.
+- **Auto color & icon**: a new action gets a color and icon picked by a small on-device text model (English + Vietnamese)
+  from how related it is to your past actions: the same text keeps its look, a very related one keeps the icon with a
+  slightly different shade, an unrelated one gets the best-matching icon and a hue you use least.
+- **Per-action color & icon** (242 icons in groups: food, health, sport, work, home, …); tap a row to edit text, description, time, color and icon; delete with undo.
 - **Suggestions**: frequent actions appear as you type; one tap logs them again.
 - **Search** that ignores Vietnamese diacritics ("ca phe" finds "cà phê").
 - **Home-screen widget, app shortcut, share-to-app.**
@@ -51,6 +54,8 @@ cd My-daily-note
 Release builds are signed with the key from `keystore.properties` (gitignored); without it they fall back to the debug key.
 CI publishes a signed APK to GitHub Releases when a `v*` tag is pushed (see `.github/workflows/release.yml`).
 
+The auto-style model (`core/data/src/main/assets/autostyle/embeddings.bin`) is rebuilt with `tools/autostyle/build_model.py`.
+
 The startup profile in `app/src/main/generated` is regenerated with `./gradlew :app:generateBaselineProfile` (API 33+ emulator, English UI).
 
 ### Project layout
@@ -58,7 +63,7 @@ The startup profile in `app/src/main/generated` is regenerated with `./gradlew :
 | Module | Contents |
 |---|---|
 | `app` | Activity, navigation rail, dependency wiring, widget, shortcuts, backup agent, voice-model cleanup |
-| `core:data` | Room database (entries, groups, full-text search), settings (DataStore), import/export |
+| `core:data` | Room database (entries, groups, full-text search), settings (DataStore), import/export, auto color & icon |
 | `core:ui` | Theme, color palette, icons, formatters, shared strings (`values`, `values-vi`) |
 | `feature:home` | Home list, text input, editors |
 | `feature:settings` | Settings, licenses |

@@ -36,6 +36,26 @@ interface EntryDao {
     )
     fun suggestions(prefix: String, limit: Int): Flow<List<SuggestionRow>>
 
+    /** The latest style of each distinct text that has a color and an icon, most recent first. */
+    @Query(
+        "SELECT e.text AS text, COALESCE(e.colorOverride, g.color) AS color, " +
+            "COALESCE(e.iconOverride, g.icon) AS icon, MAX(e.achievedAt) AS lastAt FROM entries e " +
+            "LEFT JOIN action_groups g ON e.groupId = g.id WHERE e.deletedAt IS NULL " +
+            "AND COALESCE(e.colorOverride, g.color) IS NOT NULL AND COALESCE(e.iconOverride, g.icon) IS NOT NULL " +
+            "GROUP BY e.searchText ORDER BY lastAt DESC LIMIT :limit"
+    )
+    suspend fun styledTexts(limit: Int): List<StyledRow>
+
+    /** Entries shown without a color or an icon, oldest first. */
+    @Query(
+        "$SELECT_WITH_GROUP WHERE e.deletedAt IS NULL AND (COALESCE(e.colorOverride, g.color) IS NULL " +
+            "OR COALESCE(e.iconOverride, g.icon) IS NULL) ORDER BY e.achievedAt ASC, e.id ASC"
+    )
+    suspend fun unstyled(): List<EntryWithGroup>
+
+    @Query("UPDATE entries SET colorOverride = :color, iconOverride = :icon WHERE id = :id")
+    suspend fun setStyle(id: Long, color: String?, icon: String?)
+
     @Insert
     suspend fun insert(entry: EntryEntity): Long
 

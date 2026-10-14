@@ -15,12 +15,6 @@ data class AppSettings(
     /** 0..23; entries before this hour belong to the previous day. */
     val dayStartHour: Int = 0,
     val timeFormat: TimeFormat = TimeFormat.SYSTEM,
-    /** Palette key for entries with no color of their own. */
-    val defaultColor: String = DEFAULT_COLOR,
     val autoBackup: Boolean = false,
     val updateCheck: Boolean = false,
-) {
-    companion object {
-        const val DEFAULT_COLOR = "teal"
-    }
-}
+)

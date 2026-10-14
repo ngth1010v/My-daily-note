@@ -38,8 +38,6 @@
     <string name="color_icon_title">Màu &amp; biểu tượng</string>
     <string name="color_label">Màu</string>
     <string name="icon_label">Biểu tượng</string>
-    <string name="color_default">Mặc định</string>
-    <string name="icon_none">Không có</string>
     <string name="icon_group_food">Ăn uống</string>
     <string name="icon_group_health">Sức khỏe &amp; chăm sóc</string>
     <string name="icon_group_sport">Thể thao</string>
@@ -73,7 +71,6 @@
     <string name="time_system">Theo hệ thống</string>
     <string name="time_12">12 giờ</string>
     <string name="time_24">24 giờ</string>
-    <string name="pref_default_color">Màu mặc định của hành động</string>
     <string name="pref_export">Xuất dữ liệu</string>
     <string name="pref_export_summary">Lưu tất cả hành động ra tệp</string>
     <string name="export_json">JSON (sao lưu đầy đủ)</string>

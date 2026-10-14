@@ -60,6 +60,14 @@ data class EntryWithGroup(
     @ColumnInfo(name = "groupIcon") val groupIcon: String?,
 )
 
+/** A distinct action text with the color and icon it is shown with (its own, else its group's). */
+data class StyledRow(
+    val text: String,
+    val color: String,
+    val icon: String,
+    val lastAt: Long,
+)
+
 data class SuggestionRow(
     val text: String,
     val colorOverride: String?,

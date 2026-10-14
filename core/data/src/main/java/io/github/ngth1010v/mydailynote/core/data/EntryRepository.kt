@@ -4,6 +4,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import io.github.ngth1010v.mydailynote.core.data.autostyle.AutoStyle
+import io.github.ngth1010v.mydailynote.core.data.autostyle.StyledText
 import io.github.ngth1010v.mydailynote.core.data.db.AppDatabase
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
 import io.github.ngth1010v.mydailynote.core.data.model.EntrySource
@@ -41,6 +43,27 @@ class EntryRepository(
         dao.suggestions(TextNormalizer.likePrefix(prefix), limit).map { rows ->
             rows.map { Suggestion(it.text, it.colorOverride, it.iconOverride, it.count) }
         }
+
+    /** Past actions' styles for [AutoStyle], most recent first. */
+    suspend fun styleHistory(limit: Int = 500): List<StyledText> =
+        dao.styledTexts(limit).map { StyledText(it.text, it.color, it.icon) }
+
+    /** Gives every action shown without a color or icon an auto-picked one, oldest first. */
+    suspend fun fillMissingStyles(autoStyle: AutoStyle) {
+        val missing = dao.unstyled().map { it.toModel() }
+        if (missing.isEmpty()) return
+        val history = styleHistory().toMutableList()
+        val known = history.mapTo(HashSet()) { TextNormalizer.normalize(it.text) }
+        for (e in missing) {
+            val picked = autoStyle.pick(e.text, history)
+            val color = e.colorOverride ?: picked.color.takeIf { e.groupColor == null }
+            val icon = e.iconOverride ?: picked.icon.takeIf { e.groupIcon == null }
+            dao.setStyle(e.id, color, icon)
+            if (known.add(TextNormalizer.normalize(e.text))) {
+                history.add(0, StyledText(e.text, e.color ?: picked.color, e.icon ?: picked.icon))
+            }
+        }
+    }
 
     /** Logs a new entry achieved now (or at [achievedAt]). Returns its id. */
     suspend fun add(

@@ -97,7 +97,7 @@ fun MainScaffold(
 
     val homeVm: HomeViewModel = viewModel(factory = viewModelFactory {
         initializer {
-            HomeViewModel(container.entries, container.settings)
+            HomeViewModel(container.entries, container.settings) { container.autoStyle }
         }
     })
     val home = rememberHomeController(homeVm)

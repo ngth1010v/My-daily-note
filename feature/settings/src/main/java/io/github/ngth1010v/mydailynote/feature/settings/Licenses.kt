@@ -6,6 +6,8 @@ internal val thirdParties = listOf(
     ThirdParty("Kotlin, kotlinx.coroutines", "Apache-2.0", "https://github.com/JetBrains/kotlin"),
     ThirdParty("AndroidX (Compose, Room, Paging, DataStore, Lifecycle, Activity, AppCompat, Core)", "Apache-2.0", "https://developer.android.com/jetpack/androidx"),
     ThirdParty("Material Icons", "Apache-2.0", "https://fonts.google.com/icons"),
+    ThirdParty("Model2Vec potion-multilingual-128M (cut to English + Vietnamese)", "MIT", "https://huggingface.co/minishlab/potion-multilingual-128M"),
+    ThirdParty("BAAI bge-m3 (tokenizer, distillation source)", "MIT", "https://huggingface.co/BAAI/bge-m3"),
 )
 
 internal const val MIT_LICENSE = """MIT License

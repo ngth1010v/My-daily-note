@@ -50,7 +50,6 @@ import io.github.ngth1010v.mydailynote.core.data.backup.BackupFormat
 import io.github.ngth1010v.mydailynote.core.data.settings.AppSettings
 import io.github.ngth1010v.mydailynote.core.data.settings.RailSide
 import io.github.ngth1010v.mydailynote.core.data.settings.TimeFormat
-import io.github.ngth1010v.mydailynote.core.ui.ColorGrid
 import io.github.ngth1010v.mydailynote.core.ui.R
 import java.time.LocalDate
 
@@ -253,16 +252,8 @@ private fun LazyListScope.general(vm: SettingsViewModel, s: AppSettings) {
             s.timeFormat,
         ) { v -> vm.update { it.copy(timeFormat = v) } }
     }
-    item { DefaultColorPref(s.defaultColor) { v -> vm.update { it.copy(defaultColor = v) } } }
 }
 
-@Composable
-private fun DefaultColorPref(selected: String, onSelect: (String) -> Unit) {
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-        Text(stringResource(R.string.pref_default_color), style = MaterialTheme.typography.bodyLarge)
-        ColorGrid(selected, onSelect, Modifier.padding(top = 8.dp))
-    }
-}
 
 @Composable
 private fun LicensesPage() {

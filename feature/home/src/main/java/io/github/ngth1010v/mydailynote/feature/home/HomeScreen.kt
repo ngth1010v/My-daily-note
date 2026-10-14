@@ -176,7 +176,7 @@ fun HomeScreen(
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (vm.searchOpen) {
-                    SearchContent(vm, formatters, settings.defaultColor, onEntryAction, onOpen)
+                    SearchContent(vm, formatters, onEntryAction, onOpen)
                 } else {
                     val empty = items.loadState.refresh is LoadState.NotLoading && items.itemCount == 0
                     // Only lay the list out once rows exist: measuring it empty would clamp the saved
@@ -196,7 +196,7 @@ fun HomeScreen(
                             contentType = items.itemContentType { if (it is HomeItem.Row) 0 else 1 },
                         ) { index ->
                             when (val item = items[index]) {
-                                is HomeItem.Row -> EntryRow(item.entry, formatters, settings.defaultColor, onEntryAction, onOpen, vm::delete)
+                                is HomeItem.Row -> EntryRow(item.entry, formatters, onEntryAction, onOpen, vm::delete)
                                 is HomeItem.Header -> DayHeader(formatters.day(item.day, today))
                                 null -> Spacer(Modifier.height(40.dp))
                             }
@@ -234,7 +234,7 @@ fun HomeScreen(
                 }
             }
             InputPanel(
-                vm, settings.defaultColor,
+                vm,
                 Modifier.padding(start = startPad, end = endPad),
             )
         }
@@ -244,7 +244,7 @@ fun HomeScreen(
         )
         vm.detail?.let { entry ->
             EntryDetailScreen(
-                entry, formatters, settings.defaultColor,
+                entry, formatters,
                 onSave = vm::update,
                 onDelete = vm::delete,
                 onClose = { vm.detail = null },
@@ -255,7 +255,6 @@ fun HomeScreen(
     EntryEditorHost(
         editor = editor,
         use24h = formatters.use24h,
-        defaultColor = settings.defaultColor,
         onUpdate = vm::update,
         onChangeTime = vm::changeTime,
         onClose = { editor = null },
@@ -267,7 +266,6 @@ fun HomeScreen(
 private fun EntryRow(
     entry: Entry,
     formatters: Formatters,
-    defaultColor: String,
     onEditor: (EntryEditor) -> Unit,
     onOpen: (Entry) -> Unit,
     onDelete: (Entry) -> Unit,
@@ -287,7 +285,7 @@ private fun EntryRow(
                 .animateContentSize(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val color = EntryPalette.color(entry.color, defaultColor)
+            val color = EntryPalette.color(entry.color)
             Box(
                 Modifier.padding(end = 12.dp).size(40.dp).background(color.copy(alpha = 0.18f), CircleShape),
                 contentAlignment = Alignment.Center,
@@ -367,7 +365,6 @@ private fun EmptyState(modifier: Modifier) {
 private fun SearchContent(
     vm: HomeViewModel,
     formatters: Formatters,
-    defaultColor: String,
     onEditor: (EntryEditor) -> Unit,
     onOpen: (Entry) -> Unit,
 ) {
@@ -405,7 +402,7 @@ private fun SearchContent(
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             items(results, key = { it.id }) { entry ->
-                EntryRow(entry, formatters, defaultColor, onEditor, onOpen, vm::delete, showDate = true)
+                EntryRow(entry, formatters, onEditor, onOpen, vm::delete, showDate = true)
             }
         }
     }

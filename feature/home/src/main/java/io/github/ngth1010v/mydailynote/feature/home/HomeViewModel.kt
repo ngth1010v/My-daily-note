@@ -11,6 +11,7 @@ import androidx.paging.cachedIn
 import androidx.paging.insertSeparators
 import androidx.paging.map
 import io.github.ngth1010v.mydailynote.core.data.EntryRepository
+import io.github.ngth1010v.mydailynote.core.data.autostyle.AutoStyle
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
 import io.github.ngth1010v.mydailynote.core.data.model.EntrySource
 import io.github.ngth1010v.mydailynote.core.data.model.Suggestion
@@ -33,6 +34,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 
@@ -64,6 +66,8 @@ sealed interface HomeEvent {
 class HomeViewModel(
     private val entries: EntryRepository,
     private val settingsRepo: SettingsRepository,
+    /** Slow the first time (loads the model): call off the main thread. */
+    private val autoStyle: () -> AutoStyle,
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> =
@@ -117,6 +121,10 @@ class HomeViewModel(
 
     init {
         viewModelScope.launch(Dispatchers.IO) { entries.purgeDeleted() }
+        // Every action needs a color and an icon: style old and imported ones once they appear.
+        viewModelScope.launch(Dispatchers.Default) {
+            entries.count.debounce(500).collect { entries.fillMissingStyles(autoStyle()) }
+        }
     }
 
     fun onTextChange(value: String) {
@@ -139,7 +147,9 @@ class HomeViewModel(
         text = ""
         mode = InputMode.Idle
         viewModelScope.launch {
-            entries.add(value, EntrySource.TEXT)
+            // A typed (not re-logged) action gets a color and icon picked from how it relates to past ones.
+            val style = withContext(Dispatchers.Default) { autoStyle().pick(value, entries.styleHistory()) }
+            entries.add(value, EntrySource.TEXT, style.color, style.icon)
             events.send(HomeEvent.Saved)
         }
     }

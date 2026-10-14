@@ -75,7 +75,7 @@ val HomeController.isEditing: Boolean get() = vm.detail != null
 
 /** Bottom panel: text field with suggestions. */
 @Composable
-internal fun InputPanel(vm: HomeViewModel, defaultColor: String, modifier: Modifier = Modifier) {
+internal fun InputPanel(vm: HomeViewModel, modifier: Modifier = Modifier) {
     val mode = vm.mode
     AnimatedVisibility(mode != InputMode.Idle, modifier) {
         Surface(
@@ -95,7 +95,7 @@ internal fun InputPanel(vm: HomeViewModel, defaultColor: String, modifier: Modif
                                 SuggestionChip(
                                     onClick = { vm.relog(s) },
                                     label = { Text(s.text, maxLines = 1) },
-                                    icon = { EntryBadge(EntryPalette.color(s.color, defaultColor), s.icon, size = 16.dp) },
+                                    icon = { EntryBadge(EntryPalette.color(s.color), s.icon, size = 16.dp) },
                                 )
                             }
                         }
