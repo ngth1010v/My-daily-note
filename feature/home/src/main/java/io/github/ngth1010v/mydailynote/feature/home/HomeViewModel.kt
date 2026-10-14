@@ -147,19 +147,22 @@ class HomeViewModel(
         text = ""
         mode = InputMode.Idle
         viewModelScope.launch {
-            // A typed (not re-logged) action gets a color and icon picked from how it relates to past ones.
-            val style = withContext(Dispatchers.Default) { autoStyle().pick(value, entries.styleHistory()) }
-            entries.add(value, EntrySource.TEXT, style.color, style.icon)
+            // The same text as a past action (ignoring case and accents) logs that action again. A new
+            // one gets a color and icon picked from how it relates to past ones.
+            if (entries.addAsExisting(value, EntrySource.TEXT) == null) {
+                val style = withContext(Dispatchers.Default) { autoStyle().pick(value, entries.styleHistory()) }
+                entries.add(value, EntrySource.TEXT, style.color, style.icon)
+            }
             events.send(HomeEvent.Saved)
         }
     }
 
-    /** One-tap re-log of a previous entry, keeping its color and icon. */
+    /** One-tap re-log of a previous action, copying its latest entry. */
     fun relog(s: Suggestion) {
         text = ""
         mode = InputMode.Idle
         viewModelScope.launch {
-            entries.add(s.text, EntrySource.TEXT, s.color, s.icon)
+            if (entries.addAsExisting(s.text, EntrySource.TEXT) == null) entries.add(s.text, EntrySource.TEXT, s.color, s.icon)
             events.send(HomeEvent.Saved)
         }
     }

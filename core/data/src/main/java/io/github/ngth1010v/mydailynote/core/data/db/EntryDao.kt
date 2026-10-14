@@ -36,6 +36,13 @@ interface EntryDao {
     )
     fun suggestions(prefix: String, limit: Int): Flow<List<SuggestionRow>>
 
+    /** The most recent entry whose normalized text is [searchText]. */
+    @Query(
+        "$SELECT_WITH_GROUP WHERE e.deletedAt IS NULL AND e.searchText = :searchText " +
+            "ORDER BY e.achievedAt DESC, e.id DESC LIMIT 1"
+    )
+    suspend fun latestWithText(searchText: String): EntryWithGroup?
+
     /** The latest style of each distinct text that has a color and an icon, most recent first. */
     @Query(
         "SELECT e.text AS text, COALESCE(e.colorOverride, g.color) AS color, " +

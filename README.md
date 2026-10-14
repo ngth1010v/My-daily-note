@@ -18,8 +18,10 @@ Fully offline. English and Tiếng Việt.
 - **History by day**: chat-style list (newest at the bottom, scroll up for the past), sticky day labels and a "day starts at" setting for night owls.
   Windowed loading (Paging 3 + LazyColumn), so it stays smooth with years of entries.
 - **Auto color & icon**: a new action gets a color and icon picked by a small on-device text model (English + Vietnamese)
-  from how related it is to your past actions: the same text keeps its look, a very related one keeps the icon with a
-  slightly different shade, an unrelated one gets the best-matching icon and a hue you use least.
+  from how related it is to your past actions: a very related one keeps the icon with a slightly different shade, an
+  unrelated one gets the best-matching icon and a hue you use least.
+- **Same text, same action**: typing an action you've logged before (ignoring case and accents, so "CA PHE" = "Cà phê")
+  logs it again with its spelling, description, color, icon and group; only the time is new.
 - **Per-action color & icon** (242 icons in groups: food, health, sport, work, home, …); tap a row to edit text, description, time, color and icon; delete with undo.
 - **Suggestions**: frequent actions appear as you type; one tap logs them again.
 - **Search** that ignores Vietnamese diacritics ("ca phe" finds "cà phê").

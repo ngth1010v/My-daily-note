@@ -104,6 +104,25 @@ class EntryRepository(
         return dao.insert(entry.toEntity())
     }
 
+    /**
+     * Logs [text] again as the latest entry with the same text (ignoring case and accents): its
+     * spelling, description, color, icon and group are copied; only the time is new. Returns the new
+     * id, or null when there is no such entry.
+     */
+    suspend fun addAsExisting(text: String, source: EntrySource, achievedAt: Instant = clock.instant()): Long? {
+        val existing = dao.latestWithText(TextNormalizer.normalize(text))?.toModel() ?: return null
+        val now = clock.instant()
+        val entry = existing.copy(
+            id = 0,
+            achievedAt = achievedAt,
+            zoneOffset = clock.zone.rules.getOffset(achievedAt),
+            createdAt = now,
+            updatedAt = now,
+            source = source,
+        )
+        return dao.insert(entry.toEntity())
+    }
+
     suspend fun update(entry: Entry) {
         dao.update(entry.copy(text = entry.text.trim(), updatedAt = clock.instant()).toEntity())
     }
