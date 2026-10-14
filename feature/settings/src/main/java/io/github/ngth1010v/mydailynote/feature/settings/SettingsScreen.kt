@@ -115,6 +115,7 @@ private fun MainPage(vm: SettingsViewModel, onLicenses: () -> Unit) {
                 importFile.launch(arrayOf("application/json", "text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream"))
             })
         }
+        item { PrefItem(stringResource(R.string.pref_restyle), stringResource(R.string.pref_restyle_summary), onClick = { dialog = "restyle" }) }
         item {
             SwitchPref(stringResource(R.string.pref_auto_backup), stringResource(R.string.pref_auto_backup_summary), s.autoBackup) { v ->
                 vm.update { it.copy(autoBackup = v) }
@@ -182,6 +183,15 @@ private fun MainPage(vm: SettingsViewModel, onLicenses: () -> Unit) {
                 }
             },
             confirmButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.action_cancel)) } },
+        )
+        "restyle" -> AlertDialog(
+            onDismissRequest = { dialog = null },
+            title = { Text(stringResource(R.string.restyle_confirm_title)) },
+            text = { Text(stringResource(R.string.restyle_confirm_body)) },
+            confirmButton = {
+                TextButton(onClick = { dialog = null; vm.restyleAll() }) { Text(stringResource(R.string.restyle_confirm)) }
+            },
+            dismissButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.action_cancel)) } },
         )
         "clear" -> AlertDialog(
             onDismissRequest = { dialog = null },
@@ -295,4 +305,5 @@ private fun message(context: Context, m: SettingsMessage): String = when (m) {
     is SettingsMessage.Imported -> context.getString(R.string.import_done, m.imported, m.skipped)
     SettingsMessage.ImportFailed -> context.getString(R.string.import_failed)
     SettingsMessage.Cleared -> context.getString(R.string.clear_done)
+    is SettingsMessage.Restyled -> context.resources.getQuantityString(R.plurals.restyle_done, m.count, m.count)
 }

@@ -301,7 +301,7 @@ object EntryIcons {
             Item("mind", Icons.Filled.Psychology, "mental health therapy think, sức khỏe tinh thần"),
             Item("spa", Icons.Filled.Spa, "spa massage relax, thư giãn mát xa"),
             Item("sleep", Icons.Filled.Bedtime, "sleep go to bed nap, đi ngủ"),
-            Item("wake", Icons.Filled.WbSunny, "wake up morning sun, thức dậy buổi sáng"),
+            Item("wake", Icons.Filled.WbSunny, "wake up get up, thức dậy"),
             Item("alarm", Icons.Filled.Alarm, "alarm clock, báo thức"),
             Item("shower", Icons.Filled.Shower, "take a shower, tắm vòi sen"),
             Item("bath", Icons.Filled.Bathtub, "take a bath bathtub, tắm bồn"),

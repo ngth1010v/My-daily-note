@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import androidx.room.withTransaction
 import io.github.ngth1010v.mydailynote.core.data.autostyle.AutoStyle
 import io.github.ngth1010v.mydailynote.core.data.autostyle.StyledText
 import io.github.ngth1010v.mydailynote.core.data.db.AppDatabase
@@ -63,6 +64,22 @@ class EntryRepository(
                 history.add(0, StyledText(e.text, e.color ?: picked.color, e.icon ?: picked.icon))
             }
         }
+    }
+
+    /**
+     * Replaces every action's color and icon (its own and its group's look) with a fresh pick, oldest
+     * first, as if each were typed in that order. Returns how many actions were restyled.
+     */
+    suspend fun restyleAll(autoStyle: AutoStyle): Int = db.withTransaction {
+        val all = dao.allForExport()
+        val history = ArrayList<StyledText>()
+        val known = HashSet<String>()
+        for (e in all) {
+            val picked = autoStyle.pick(e.text, history)
+            dao.setStyle(e.id, picked.color, picked.icon)
+            if (known.add(e.searchText)) history.add(0, StyledText(e.text, picked.color, picked.icon))
+        }
+        all.size
     }
 
     /** Logs a new entry achieved now (or at [achievedAt]). Returns its id. */

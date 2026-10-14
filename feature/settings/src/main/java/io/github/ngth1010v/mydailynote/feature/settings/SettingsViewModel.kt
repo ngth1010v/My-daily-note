@@ -5,6 +5,7 @@ import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.ngth1010v.mydailynote.core.data.EntryRepository
+import io.github.ngth1010v.mydailynote.core.data.autostyle.AutoStyle
 import io.github.ngth1010v.mydailynote.core.data.backup.BackupFormat
 import io.github.ngth1010v.mydailynote.core.data.backup.BackupRepository
 import io.github.ngth1010v.mydailynote.core.data.settings.AppSettings
@@ -46,12 +47,15 @@ sealed interface SettingsMessage {
     data class Imported(val imported: Int, val skipped: Int) : SettingsMessage
     data object ImportFailed : SettingsMessage
     data object Cleared : SettingsMessage
+    data class Restyled(val count: Int) : SettingsMessage
 }
 
 class SettingsViewModel(
     private val settingsRepo: SettingsRepository,
     private val entries: EntryRepository,
     private val backup: BackupRepository,
+    /** Slow the first time (loads the model): call off the main thread. */
+    private val autoStyle: () -> AutoStyle,
     val appInfo: AppInfo,
 ) : ViewModel() {
 
@@ -122,6 +126,13 @@ class SettingsViewModel(
             messages.send(
                 result.fold({ SettingsMessage.Imported(it.imported, it.skippedDuplicates) }, { SettingsMessage.ImportFailed })
             )
+        }
+    }
+
+    fun restyleAll() {
+        viewModelScope.launch {
+            val count = withContext(Dispatchers.Default) { entries.restyleAll(autoStyle()) }
+            messages.send(SettingsMessage.Restyled(count))
         }
     }
 

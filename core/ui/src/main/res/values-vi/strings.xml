@@ -83,6 +83,14 @@
     <string name="import_failed">Không đọc được tệp này</string>
     <string name="pref_auto_backup">Sao lưu Android</string>
     <string name="pref_auto_backup_summary">Đưa hành động vào bản sao lưu thiết bị của Android</string>
+    <string name="pref_restyle">Chọn lại màu &amp; biểu tượng</string>
+    <string name="pref_restyle_summary">Tự động chọn màu và biểu tượng mới cho mọi hành động</string>
+    <string name="restyle_confirm_title">Chọn lại màu và biểu tượng cho tất cả?</string>
+    <string name="restyle_confirm_body">Màu và biểu tượng hiện tại của mọi hành động, kể cả những cái bạn tự chọn, sẽ được thay bằng lựa chọn tự động mới. Không thể hoàn tác.</string>
+    <string name="restyle_confirm">Chọn lại</string>
+    <plurals name="restyle_done">
+        <item quantity="other">Đã chọn màu và biểu tượng mới cho %d hành động</item>
+    </plurals>
     <string name="pref_clear">Xóa toàn bộ dữ liệu</string>
     <string name="clear_confirm_title">Xóa tất cả hành động?</string>
     <string name="clear_confirm_body">Không thể hoàn tác. Hãy xuất bản sao lưu trước nếu bạn có thể cần đến.</string>

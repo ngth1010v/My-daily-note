@@ -137,6 +137,7 @@ fun MainScaffold(
                                 settingsRepo = container.settings,
                                 entries = container.entries,
                                 backup = container.backup,
+                                autoStyle = { container.autoStyle },
                                 appInfo = AppInfo(BuildConfig.VERSION_NAME, "https://github.com/$REPO_SLUG", REPO_SLUG),
                             )
                         }

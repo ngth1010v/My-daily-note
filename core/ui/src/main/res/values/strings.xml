@@ -87,6 +87,15 @@
     <string name="import_failed">Couldn\'t read that file</string>
     <string name="pref_auto_backup">Android backup</string>
     <string name="pref_auto_backup_summary">Include your actions in Android\'s device backup</string>
+    <string name="pref_restyle">Re-pick colors &amp; icons</string>
+    <string name="pref_restyle_summary">Give every action a fresh automatic color and icon</string>
+    <string name="restyle_confirm_title">Re-pick all colors and icons?</string>
+    <string name="restyle_confirm_body">Every action\'s current color and icon, including ones you chose yourself, will be replaced with a new automatic pick. This can\'t be undone.</string>
+    <string name="restyle_confirm">Re-pick</string>
+    <plurals name="restyle_done">
+        <item quantity="one">New color and icon for %d action</item>
+        <item quantity="other">New colors and icons for %d actions</item>
+    </plurals>
     <string name="pref_clear">Clear all data</string>
     <string name="clear_confirm_title">Delete all actions?</string>
     <string name="clear_confirm_body">This can\'t be undone. Export a backup first if you might need it.</string>
