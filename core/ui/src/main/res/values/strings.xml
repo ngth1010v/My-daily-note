@@ -42,6 +42,7 @@
     <string name="color_icon_title">Color &amp; icon</string>
     <string name="color_label">Color</string>
     <string name="icon_label">Icon</string>
+    <string name="icon_select">Select icon</string>
     <string name="icon_group_food">Food &amp; drink</string>
     <string name="icon_group_health">Health &amp; self-care</string>
     <string name="icon_group_sport">Sport</string>

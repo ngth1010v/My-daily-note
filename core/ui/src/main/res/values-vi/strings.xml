@@ -38,6 +38,7 @@
     <string name="color_icon_title">Màu &amp; biểu tượng</string>
     <string name="color_label">Màu</string>
     <string name="icon_label">Biểu tượng</string>
+    <string name="icon_select">Chọn biểu tượng</string>
     <string name="icon_group_food">Ăn uống</string>
     <string name="icon_group_health">Sức khỏe &amp; chăm sóc</string>
     <string name="icon_group_sport">Thể thao</string>
