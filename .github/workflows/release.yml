@@ -49,9 +49,6 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           mkdir -p dist
-          for f in app/build/outputs/apk/release/app-*-release.apk; do
-            abi=$(basename "$f" | sed -E 's/app-(.*)-release.apk/\1/')
-            cp "$f" "dist/my-daily-note-$TAG-$abi.apk"
-          done
+          cp app/build/outputs/apk/release/app-release.apk "dist/my-daily-note-$TAG.apk"
           (cd dist && sha256sum *.apk > SHA256SUMS.txt)
           gh release create "$TAG" dist/* --title "My daily note $TAG" --generate-notes
