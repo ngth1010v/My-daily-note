@@ -1,6 +1,6 @@
 # My daily note — Product Idea
 
-> Repo: `My-daily-note` · License: MIT · Platform: Android · Languages: English, Tiếng Việt (extensible)
+> Repo: `My-diary` · License: MIT · Platform: Android · Languages: English, Tiếng Việt (extensible)
 
 A high-performance Android app for **quickly noting small actions in everyday life** — by typing or, mainly, by **offline voice**. Entries are short sentences (grammar and meaning optional) that accumulate day after day into a personal history.
 

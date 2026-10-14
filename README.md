@@ -1,6 +1,6 @@
 # My daily note
 
-[![Build](https://github.com/ngth1010v/My-daily-note/actions/workflows/build.yml/badge.svg)](https://github.com/ngth1010v/My-daily-note/actions/workflows/build.yml)
+[![Build](https://github.com/ngth1010v/My-diary/actions/workflows/build.yml/badge.svg)](https://github.com/ngth1010v/My-diary/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](LICENSE)
 
 A fast Android app for noting the small things you do every day: **type it, and it's saved**.
@@ -30,7 +30,7 @@ Fully offline. English and Tiếng Việt.
 
 ## Install
 
-Download the APK from [Releases](https://github.com/ngth1010v/My-daily-note/releases),
+Download the APK from [Releases](https://github.com/ngth1010v/My-diary/releases),
 open it and allow installing from this source. Android 8.0+.
 
 Updating from a version with voice input frees the downloaded voice models automatically on first launch.
@@ -45,8 +45,8 @@ The `INTERNET` permission is used only to check GitHub for new releases, if you 
 Requirements: JDK 17+, Android SDK (API 37).
 
 ```sh
-git clone https://github.com/ngth1010v/My-daily-note.git
-cd My-daily-note
+git clone https://github.com/ngth1010v/My-diary.git
+cd My-diary
 ./gradlew :app:assembleDebug        # app/build/outputs/apk/debug/
 ./gradlew testDebugUnitTest         # unit tests
 ```
