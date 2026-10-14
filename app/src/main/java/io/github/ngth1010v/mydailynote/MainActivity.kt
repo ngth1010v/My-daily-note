@@ -1,7 +1,9 @@
 package io.github.ngth1010v.mydailynote
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -13,11 +15,15 @@ import io.github.ngth1010v.mydailynote.core.ui.theme.MyDailyNoteTheme
 import io.github.ngth1010v.mydailynote.feature.home.HomeLaunch
 
 class MainActivity : AppCompatActivity() {
-    /** Pending request from a widget, tile, shortcut or share; consumed by the Home screen. */
+    /** Pending request from a widget, shortcut or share; consumed by the Home screen. */
     private var launch by mutableStateOf<HomeLaunch?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        // Light theme only: dark system bar icons even when the system is in dark mode.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) launch = intent.toLaunch()
         val container = container
@@ -25,7 +31,7 @@ class MainActivity : AppCompatActivity() {
             val settings by container.settings.settings.collectAsStateWithLifecycle(initialValue = null)
             // Draw nothing until settings load (a few ms) so the theme never flashes.
             val s = settings ?: return@setContent
-            MyDailyNoteTheme(themeMode = s.themeMode, dynamicColor = s.dynamicColor) {
+            MyDailyNoteTheme(dynamicColor = s.dynamicColor) {
                 MainScaffold(
                     container = container,
                     settings = s,
@@ -42,14 +48,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun Intent?.toLaunch(): HomeLaunch? = when (this?.action) {
-        ACTION_ADD_VOICE -> HomeLaunch.Voice
         ACTION_ADD_TEXT -> HomeLaunch.Text
         Intent.ACTION_SEND -> getStringExtra(Intent.EXTRA_TEXT)?.trim()?.takeIf { it.isNotEmpty() }?.let(HomeLaunch::Share)
         else -> null
     }
 
     companion object {
-        const val ACTION_ADD_VOICE = "io.github.ngth1010v.mydailynote.action.ADD_VOICE"
         const val ACTION_ADD_TEXT = "io.github.ngth1010v.mydailynote.action.ADD_TEXT"
     }
 }

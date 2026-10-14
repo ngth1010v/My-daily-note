@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,7 +55,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -75,23 +73,18 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
 import io.github.ngth1010v.mydailynote.core.data.model.dayOf
-import io.github.ngth1010v.mydailynote.core.data.model.EntrySource
 import io.github.ngth1010v.mydailynote.core.ui.EntryBadge
 import io.github.ngth1010v.mydailynote.core.ui.EntryPalette
 import io.github.ngth1010v.mydailynote.core.ui.Formatters
 import io.github.ngth1010v.mydailynote.core.ui.R
-import io.github.ngth1010v.mydailynote.core.ui.languageName
-import io.github.ngth1010v.mydailynote.speech.api.SpeechError
-import io.github.ngth1010v.mydailynote.speech.api.VoiceLanguage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterNotNull
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-/** Requests from outside the screen: widget, quick settings tile, app shortcut, share sheet. */
+/** Requests from outside the screen: widget, app shortcut, share sheet. */
 sealed interface HomeLaunch {
-    data object Voice : HomeLaunch
     data object Text : HomeLaunch
     data class Share(val text: String) : HomeLaunch
 }
@@ -110,7 +103,6 @@ fun HomeScreen(
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val formatters = remember(configuration, settings.timeFormat) { Formatters(context, settings.timeFormat) }
-    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val today = rememberToday(settings.dayStartHour)
     val view = LocalView.current
     // List index 0 is the scroll-room spacer under the newest row; entries start at index 1.
@@ -121,14 +113,6 @@ fun HomeScreen(
 
     val deletedText = stringResource(R.string.entry_deleted)
     val undoText = stringResource(R.string.undo)
-    val messages = mapOf(
-        SpeechError.NO_MATCH to stringResource(R.string.voice_no_match),
-        SpeechError.AUDIO to stringResource(R.string.voice_error_audio),
-        SpeechError.NOT_AVAILABLE to stringResource(R.string.voice_error_not_available),
-        SpeechError.ENGINE to stringResource(R.string.voice_error_engine),
-    )
-    val langSwitched = stringResource(R.string.voice_language_switched, "%s")
-    val langNames = VoiceLanguage.entries.associateWith { languageName(it) }
 
     LaunchedEffect(vm) {
         vm.eventFlow.collect { event ->
@@ -145,9 +129,6 @@ fun HomeScreen(
                     val r = controller.snackbar.showSnackbar(deletedText, undoText, duration = SnackbarDuration.Short)
                     if (r == SnackbarResult.ActionPerformed) vm.undoDelete(event.id)
                 }
-                is HomeEvent.VoiceFailed -> messages[event.error]?.let { controller.snackbar.showSnackbar(it) }
-                is HomeEvent.VoiceLanguageChanged ->
-                    controller.snackbar.showSnackbar(langSwitched.replace("%s", langNames.getValue(event.language)))
             }
         }
     }
@@ -176,7 +157,6 @@ fun HomeScreen(
     LaunchedEffect(launch) {
         when (launch) {
             null -> return@LaunchedEffect
-            HomeLaunch.Voice -> controller.onMic()
             HomeLaunch.Text -> vm.startTyping()
             is HomeLaunch.Share -> vm.startTyping(launch.text)
         }
@@ -196,7 +176,7 @@ fun HomeScreen(
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (vm.searchOpen) {
-                    SearchContent(vm, formatters, settings.defaultColor, dark, onEntryAction, onOpen)
+                    SearchContent(vm, formatters, settings.defaultColor, onEntryAction, onOpen)
                 } else {
                     val empty = items.loadState.refresh is LoadState.NotLoading && items.itemCount == 0
                     // Only lay the list out once rows exist: measuring it empty would clamp the saved
@@ -216,7 +196,7 @@ fun HomeScreen(
                             contentType = items.itemContentType { if (it is HomeItem.Row) 0 else 1 },
                         ) { index ->
                             when (val item = items[index]) {
-                                is HomeItem.Row -> EntryRow(item.entry, formatters, settings.defaultColor, dark, onEntryAction, onOpen, vm::delete)
+                                is HomeItem.Row -> EntryRow(item.entry, formatters, settings.defaultColor, onEntryAction, onOpen, vm::delete)
                                 is HomeItem.Header -> DayHeader(formatters.day(item.day, today))
                                 null -> Spacer(Modifier.height(40.dp))
                             }
@@ -254,7 +234,7 @@ fun HomeScreen(
                 }
             }
             InputPanel(
-                vm, settings.defaultColor, dark,
+                vm, settings.defaultColor,
                 Modifier.padding(start = startPad, end = endPad),
             )
         }
@@ -264,7 +244,7 @@ fun HomeScreen(
         )
         vm.detail?.let { entry ->
             EntryDetailScreen(
-                entry, formatters, settings.defaultColor, dark,
+                entry, formatters, settings.defaultColor,
                 onSave = vm::update,
                 onDelete = vm::delete,
                 onClose = { vm.detail = null },
@@ -276,13 +256,10 @@ fun HomeScreen(
         editor = editor,
         use24h = formatters.use24h,
         defaultColor = settings.defaultColor,
-        dark = dark,
         onUpdate = vm::update,
         onChangeTime = vm::changeTime,
         onClose = { editor = null },
     )
-    MicRationaleDialog(controller)
-    ModelPromptSheet(vm)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -291,7 +268,6 @@ private fun EntryRow(
     entry: Entry,
     formatters: Formatters,
     defaultColor: String,
-    dark: Boolean,
     onEditor: (EntryEditor) -> Unit,
     onOpen: (Entry) -> Unit,
     onDelete: (Entry) -> Unit,
@@ -311,7 +287,7 @@ private fun EntryRow(
                 .animateContentSize(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val color = EntryPalette.color(entry.color, defaultColor, dark)
+            val color = EntryPalette.color(entry.color, defaultColor)
             Box(
                 Modifier.padding(end = 12.dp).size(40.dp).background(color.copy(alpha = 0.18f), CircleShape),
                 contentAlignment = Alignment.Center,
@@ -319,21 +295,7 @@ private fun EntryRow(
                 EntryBadge(color, entry.icon, size = 22.dp)
             }
             Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        entry.text,
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 2,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    if (entry.source == EntrySource.VOICE) {
-                        Icon(
-                            Icons.Filled.Mic, stringResource(R.string.voice_source),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 4.dp).size(14.dp),
-                        )
-                    }
-                }
+                Text(entry.text, style = MaterialTheme.typography.bodyLarge, maxLines = 2)
                 Text(
                     if (showDate) formatters.date(local.toLocalDate()) + " · " + formatters.time24(local) else formatters.time24(local),
                     style = MaterialTheme.typography.labelMedium,
@@ -406,7 +368,6 @@ private fun SearchContent(
     vm: HomeViewModel,
     formatters: Formatters,
     defaultColor: String,
-    dark: Boolean,
     onEditor: (EntryEditor) -> Unit,
     onOpen: (Entry) -> Unit,
 ) {
@@ -444,7 +405,7 @@ private fun SearchContent(
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             items(results, key = { it.id }) { entry ->
-                EntryRow(entry, formatters, defaultColor, dark, onEditor, onOpen, vm::delete, showDate = true)
+                EntryRow(entry, formatters, defaultColor, onEditor, onOpen, vm::delete, showDate = true)
             }
         }
     }

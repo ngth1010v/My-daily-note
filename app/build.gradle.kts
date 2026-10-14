@@ -9,8 +9,6 @@ plugins {
 android {
     namespace = "io.github.ngth1010v.mydailynote"
     compileSdk = 37
-    // Same NDK as speech:whisper; needed to strip debug symbols from native libraries.
-    ndkVersion = "30.0.16248370"
 
     defaultConfig {
         applicationId = "io.github.ngth1010v.mydailynote"
@@ -50,16 +48,6 @@ android {
         }
     }
 
-    // Release: one APK per CPU type plus a universal one (Vosk/whisper native code is per ABI).
-    splits {
-        abi {
-            isEnable = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
-            reset()
-            include("arm64-v8a", "armeabi-v7a", "x86_64")
-            isUniversalApk = true
-        }
-    }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -72,10 +60,6 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-        jniLibs {
-            // Vosk ships x86 (32-bit) libraries too; no supported device needs them.
-            excludes += "lib/x86/**"
         }
     }
 }
@@ -93,9 +77,6 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":feature:home"))
     implementation(project(":feature:settings"))
-    implementation(project(":speech:api"))
-    implementation(project(":speech:vosk"))
-    implementation(project(":speech:whisper"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -107,5 +88,4 @@ dependencies {
 
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation("com.alphacephei:vosk-android:${libs.versions.vosk.get()}")
 }

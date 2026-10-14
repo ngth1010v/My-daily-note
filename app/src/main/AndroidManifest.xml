@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Update check against GitHub releases. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -26,7 +29,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
-                <action android:name="io.github.ngth1010v.mydailynote.action.ADD_VOICE" />
                 <action android:name="io.github.ngth1010v.mydailynote.action.ADD_TEXT" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -54,16 +56,6 @@
                 android:resource="@xml/quick_add_widget" />
         </receiver>
 
-        <service
-            android:name=".VoiceTileService"
-            android:exported="true"
-            android:icon="@drawable/ic_mic"
-            android:label="@string/tile_label"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-        </service>
 
         <!-- Stores the per-app language on Android 12 and below. -->
         <service

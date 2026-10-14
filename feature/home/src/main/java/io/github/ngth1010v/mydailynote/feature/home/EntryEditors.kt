@@ -94,7 +94,6 @@ internal fun EntryEditorHost(
     editor: EntryEditor?,
     use24h: Boolean,
     defaultColor: String,
-    dark: Boolean,
     onUpdate: (Entry) -> Unit,
     onChangeTime: (Entry, Instant) -> Unit,
     onClose: () -> Unit,
@@ -103,7 +102,7 @@ internal fun EntryEditorHost(
         null -> {}
         is EntryEditor.Text -> EditTextSheet(editor.entry, onSave = { onUpdate(it); onClose() }, onDismiss = onClose)
         is EntryEditor.Time -> ChangeTimeDialogs(editor.entry, use24h, onPicked = { onChangeTime(editor.entry, it); onClose() }, onDismiss = onClose)
-        is EntryEditor.Style -> StyleSheet(editor.entry, defaultColor, dark, onChange = onUpdate, onDismiss = onClose)
+        is EntryEditor.Style -> StyleSheet(editor.entry, defaultColor, onChange = onUpdate, onDismiss = onClose)
     }
 }
 
@@ -174,7 +173,7 @@ internal fun ChangeTimeDialogs(entry: Entry, use24h: Boolean, onPicked: (Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StyleSheet(entry: Entry, defaultColor: String, dark: Boolean, onChange: (Entry) -> Unit, onDismiss: () -> Unit) {
+private fun StyleSheet(entry: Entry, defaultColor: String, onChange: (Entry) -> Unit, onDismiss: () -> Unit) {
     var color by remember { mutableStateOf(entry.colorOverride) }
     var icon by remember { mutableStateOf(entry.iconOverride) }
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -184,7 +183,7 @@ private fun StyleSheet(entry: Entry, defaultColor: String, dark: Boolean, onChan
         ) {
             Text(stringResource(R.string.color_icon_title), style = MaterialTheme.typography.titleLarge)
             StyleFields(
-                color, icon, defaultColor, dark,
+                color, icon, defaultColor,
                 onColor = { color = it; onChange(entry.copy(colorOverride = color, iconOverride = icon)) },
                 onIcon = { icon = it; onChange(entry.copy(colorOverride = color, iconOverride = icon)) },
             )
@@ -199,31 +198,39 @@ internal fun StyleFields(
     color: String?,
     icon: String?,
     defaultColor: String,
-    dark: Boolean,
     onColor: (String?) -> Unit,
     onIcon: (String?) -> Unit,
 ) {
-    val tint = EntryPalette.color(color, defaultColor, dark)
+    val tint = EntryPalette.color(color, defaultColor)
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.color_label), style = MaterialTheme.typography.labelLarge)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Swatch(
-                fill = EntryPalette.color(null, defaultColor, dark),
+                fill = EntryPalette.color(null, defaultColor),
                 selected = color == null,
                 label = stringResource(R.string.color_default),
                 outlined = true,
             ) { onColor(null) }
             Text(stringResource(R.string.color_default), style = MaterialTheme.typography.bodyMedium)
         }
-        ColorGrid(color, dark, onSelect = onColor)
-        Text(stringResource(R.string.icon_label), style = MaterialTheme.typography.labelLarge)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        ColorGrid(color, onSelect = onColor)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             IconChoice(selected = icon == null, onClick = { onIcon(null) }) {
                 Icon(Icons.Filled.Block, stringResource(R.string.icon_none), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            EntryIcons.all.forEach { (key, vector) ->
-                IconChoice(selected = icon == key, onClick = { onIcon(key) }) {
-                    Icon(vector, key, tint = tint)
+            Text(stringResource(R.string.icon_label), style = MaterialTheme.typography.labelLarge)
+        }
+        EntryIcons.groups.forEach { group ->
+            Text(
+                stringResource(group.title),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                group.icons.forEach { (key, vector) ->
+                    IconChoice(selected = icon == key, onClick = { onIcon(key) }) {
+                        Icon(vector, key, tint = tint)
+                    }
                 }
             }
         }

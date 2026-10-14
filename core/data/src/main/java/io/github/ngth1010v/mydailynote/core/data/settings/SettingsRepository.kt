@@ -18,17 +18,11 @@ class SettingsRepository(context: Context) {
     private val store = context.applicationContext.settingsStore
 
     private object Keys {
-        val theme = stringPreferencesKey("theme")
         val dynamicColor = booleanPreferencesKey("dynamic_color")
         val railSide = stringPreferencesKey("rail_side")
         val dayStartHour = intPreferencesKey("day_start_hour")
         val timeFormat = stringPreferencesKey("time_format")
         val defaultColor = stringPreferencesKey("default_color")
-        val voiceLanguage = stringPreferencesKey("voice_language")
-        val speechEngine = stringPreferencesKey("speech_engine")
-        val autoStopMs = intPreferencesKey("auto_stop_ms")
-        val highAccuracy = booleanPreferencesKey("high_accuracy")
-        val whisperModel = stringPreferencesKey("whisper_model")
         val autoBackup = booleanPreferencesKey("auto_backup")
         val updateCheck = booleanPreferencesKey("update_check")
     }
@@ -40,18 +34,11 @@ class SettingsRepository(context: Context) {
     suspend fun update(transform: (AppSettings) -> AppSettings) {
         store.edit { prefs ->
             val s = transform(prefs.toSettings())
-            prefs[Keys.theme] = s.themeMode.name
             prefs[Keys.dynamicColor] = s.dynamicColor
             prefs[Keys.railSide] = s.railSide.name
             prefs[Keys.dayStartHour] = s.dayStartHour.coerceIn(0, 23)
             prefs[Keys.timeFormat] = s.timeFormat.name
             prefs[Keys.defaultColor] = s.defaultColor
-            if (s.voiceLanguage == null) prefs.remove(Keys.voiceLanguage)
-            else prefs[Keys.voiceLanguage] = s.voiceLanguage
-            prefs[Keys.speechEngine] = s.speechEngine
-            prefs[Keys.autoStopMs] = s.autoStopMs
-            prefs[Keys.highAccuracy] = s.highAccuracy
-            prefs[Keys.whisperModel] = s.whisperModelId
             prefs[Keys.autoBackup] = s.autoBackup
             prefs[Keys.updateCheck] = s.updateCheck
         }
@@ -60,17 +47,11 @@ class SettingsRepository(context: Context) {
     private fun Preferences.toSettings(): AppSettings {
         val d = AppSettings()
         return AppSettings(
-            themeMode = enumOr(this[Keys.theme], d.themeMode),
             dynamicColor = this[Keys.dynamicColor] ?: d.dynamicColor,
             railSide = enumOr(this[Keys.railSide], d.railSide),
             dayStartHour = this[Keys.dayStartHour] ?: d.dayStartHour,
             timeFormat = enumOr(this[Keys.timeFormat], d.timeFormat),
             defaultColor = this[Keys.defaultColor] ?: d.defaultColor,
-            voiceLanguage = this[Keys.voiceLanguage],
-            speechEngine = this[Keys.speechEngine] ?: d.speechEngine,
-            autoStopMs = this[Keys.autoStopMs] ?: d.autoStopMs,
-            highAccuracy = this[Keys.highAccuracy] ?: d.highAccuracy,
-            whisperModelId = this[Keys.whisperModel] ?: d.whisperModelId,
             autoBackup = this[Keys.autoBackup] ?: d.autoBackup,
             updateCheck = this[Keys.updateCheck] ?: d.updateCheck,
         )

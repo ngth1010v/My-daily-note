@@ -16,23 +16,6 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 
 class TextNormalizerTest {
-    @Test fun snapsVoiceTextToKnownAction() {
-        val known = listOf("Cà phê", "Walk dog", "Call mom")
-        assertEquals("Cà phê", TextNormalizer.closestKnown("ca phe", known))
-        assertEquals("Walk dog", TextNormalizer.closestKnown("walk dogs", known))
-        assertNull(TextNormalizer.closestKnown("call dad", known))
-        assertNull(TextNormalizer.closestKnown("read a long book", known))
-    }
-
-    @Test fun doesNotSnapADifferentSentence() {
-        val known = listOf("Drink coffee", "Go to gym")
-        // One extra word = a different sentence, even though the characters are close.
-        assertNull(TextNormalizer.closestKnown("drink coffee x", known))
-        assertNull(TextNormalizer.closestKnown("go to the gym", known))
-        // Same words, small spelling slip: snaps.
-        assertEquals("Drink coffee", TextNormalizer.closestKnown("drink cofee", known))
-    }
-
     @Test fun stripsVietnameseDiacritics() {
         assertEquals("ca phe khong duong", TextNormalizer.normalize("  Cà  phê KHÔNG đường "))
         assertEquals("di bo", TextNormalizer.normalize("Đi bộ"))

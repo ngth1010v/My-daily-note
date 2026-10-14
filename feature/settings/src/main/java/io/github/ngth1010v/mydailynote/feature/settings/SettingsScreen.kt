@@ -24,7 +24,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +40,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -51,20 +49,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.ngth1010v.mydailynote.core.data.backup.BackupFormat
 import io.github.ngth1010v.mydailynote.core.data.settings.AppSettings
 import io.github.ngth1010v.mydailynote.core.data.settings.RailSide
-import io.github.ngth1010v.mydailynote.core.data.settings.ThemeMode
 import io.github.ngth1010v.mydailynote.core.data.settings.TimeFormat
 import io.github.ngth1010v.mydailynote.core.ui.ColorGrid
-import io.github.ngth1010v.mydailynote.core.ui.ModelRow
 import io.github.ngth1010v.mydailynote.core.ui.R
-import io.github.ngth1010v.mydailynote.core.ui.languageName
-import io.github.ngth1010v.mydailynote.speech.api.ModelKind
-import io.github.ngth1010v.mydailynote.speech.api.ModelRegistry
-import io.github.ngth1010v.mydailynote.speech.api.ModelState
-import io.github.ngth1010v.mydailynote.speech.api.SpeechEngineIds
-import io.github.ngth1010v.mydailynote.speech.api.VoiceLanguage
 import java.time.LocalDate
 
-private enum class Page { MAIN, MODELS, LICENSES }
+private enum class Page { MAIN, LICENSES }
 
 @Composable
 fun SettingsScreen(vm: SettingsViewModel, modifier: Modifier = Modifier) {
@@ -77,8 +67,7 @@ fun SettingsScreen(vm: SettingsViewModel, modifier: Modifier = Modifier) {
     BackHandler(enabled = page != Page.MAIN) { page = Page.MAIN }
     Box(modifier.fillMaxSize()) {
         when (page) {
-            Page.MAIN -> MainPage(vm, onModels = { page = Page.MODELS }, onLicenses = { page = Page.LICENSES })
-            Page.MODELS -> SubPage(stringResource(R.string.pref_models), onBack = { page = Page.MAIN }) { ModelsPage(vm) }
+            Page.MAIN -> MainPage(vm, onLicenses = { page = Page.LICENSES })
             Page.LICENSES -> SubPage(stringResource(R.string.about_oss), onBack = { page = Page.MAIN }) { LicensesPage() }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
@@ -86,7 +75,7 @@ fun SettingsScreen(vm: SettingsViewModel, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MainPage(vm: SettingsViewModel, onModels: () -> Unit, onLicenses: () -> Unit) {
+private fun MainPage(vm: SettingsViewModel, onLicenses: () -> Unit) {
     val s by vm.settings.collectAsStateWithLifecycle()
     val count by vm.entryCount.collectAsStateWithLifecycle()
     val update by vm.update.collectAsStateWithLifecycle()
@@ -113,7 +102,6 @@ private fun MainPage(vm: SettingsViewModel, onModels: () -> Unit, onLicenses: ()
             )
         }
         general(vm, s)
-        voice(vm, s, onModels)
 
         item { SectionHeader(stringResource(R.string.section_data)) }
         item {
@@ -227,17 +215,6 @@ private fun LazyListScope.general(vm: SettingsViewModel, s: AppSettings) {
         )
     }
     item {
-        ChoicePref(
-            stringResource(R.string.pref_theme),
-            listOf(
-                ThemeMode.SYSTEM to stringResource(R.string.theme_system),
-                ThemeMode.LIGHT to stringResource(R.string.theme_light),
-                ThemeMode.DARK to stringResource(R.string.theme_dark),
-            ),
-            s.themeMode,
-        ) { v -> vm.update { it.copy(themeMode = v) } }
-    }
-    item {
         SwitchPref(
             stringResource(R.string.pref_dynamic_color),
             stringResource(R.string.pref_dynamic_color_summary),
@@ -279,111 +256,11 @@ private fun LazyListScope.general(vm: SettingsViewModel, s: AppSettings) {
     item { DefaultColorPref(s.defaultColor) { v -> vm.update { it.copy(defaultColor = v) } } }
 }
 
-private fun LazyListScope.voice(vm: SettingsViewModel, s: AppSettings, onModels: () -> Unit) {
-    item { SectionHeader(stringResource(R.string.section_voice)) }
-    item {
-        ChoicePref(
-            stringResource(R.string.pref_voice_language),
-            listOf<Pair<String?, String>>(null to stringResource(R.string.voice_lang_follow)) +
-                VoiceLanguage.entries.map { it.tag to languageName(it) } +
-                (VoiceLanguage.AUTO_TAG to stringResource(R.string.voice_lang_auto)),
-            s.voiceLanguage,
-        ) { v -> vm.update { it.copy(voiceLanguage = v) } }
-    }
-    item {
-        ChoicePref(
-            title = stringResource(R.string.pref_engine),
-            options = buildList {
-                add(SpeechEngineIds.VOSK to stringResource(R.string.engine_vosk))
-                if (vm.androidEngineAvailable) add(SpeechEngineIds.ANDROID to stringResource(R.string.engine_android))
-            },
-            selected = s.speechEngine,
-            summary = if (s.speechEngine == SpeechEngineIds.ANDROID) {
-                stringResource(R.string.engine_android) +
-                    if (!vm.androidEngineAvailable) " · " + stringResource(R.string.engine_android_unavailable) else ""
-            } else stringResource(R.string.engine_vosk),
-        ) { v -> vm.update { it.copy(speechEngine = v) } }
-    }
-    item { PrefItem(stringResource(R.string.pref_models), stringResource(R.string.pref_models_summary), onClick = onModels) }
-    item {
-        ChoicePref(
-            stringResource(R.string.pref_auto_stop),
-            AppSettings.AUTO_STOP_CHOICES.map { ms ->
-                ms to if (ms == 0) stringResource(R.string.auto_stop_off)
-                else stringResource(R.string.auto_stop_seconds, (ms / 1000f).toString().removeSuffix(".0"))
-            },
-            s.autoStopMs,
-        ) { v -> vm.update { it.copy(autoStopMs = v) } }
-    }
-    item {
-        val states by vm.modelStates.collectAsStateWithLifecycle()
-        val installed = states[s.whisperModelId] is ModelState.Installed
-        SwitchPref(
-            stringResource(R.string.pref_high_accuracy),
-            stringResource(R.string.pref_high_accuracy_summary),
-            s.highAccuracy && installed,
-            enabled = installed,
-        ) { v -> vm.update { it.copy(highAccuracy = v) } }
-    }
-    item {
-        val options = ModelRegistry.whisper.map { it.id to it.displayName }
-        ChoicePref(
-            stringResource(R.string.pref_whisper_model),
-            options,
-            s.whisperModelId,
-            summary = listOfNotNull(
-                options.firstOrNull { it.first == s.whisperModelId }?.second,
-                stringResource(R.string.pref_whisper_model_hint),
-            ).joinToString("\n"),
-        ) { v -> vm.update { it.copy(whisperModelId = v) } }
-    }
-}
-
 @Composable
 private fun DefaultColorPref(selected: String, onSelect: (String) -> Unit) {
-    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
         Text(stringResource(R.string.pref_default_color), style = MaterialTheme.typography.bodyLarge)
-        ColorGrid(selected, dark, onSelect, Modifier.padding(top = 8.dp))
-    }
-}
-
-@Composable
-private fun ModelsPage(vm: SettingsViewModel) {
-    val states by vm.modelStates.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    var importTarget by rememberSaveable { mutableStateOf<String?>(null) }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        val id = importTarget
-        if (uri != null && id != null) vm.importModel(id) { context.contentResolver.openInputStream(uri) }
-        importTarget = null
-    }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-        listOf(ModelKind.VOSK to R.string.models_section_vosk, ModelKind.WHISPER to R.string.models_section_whisper).forEach { (kind, title) ->
-            Text(
-                stringResource(title),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 20.dp, bottom = 4.dp),
-            )
-            ModelRegistry.all.filter { it.kind == kind }.forEach { spec ->
-                ModelRow(
-                    spec = spec,
-                    state = states[spec.id] ?: ModelState.NotInstalled,
-                    onDownload = { vm.downloadModel(spec.id) },
-                    onImport = { importTarget = spec.id; picker.launch(arrayOf("*/*")) },
-                    onCancel = { vm.cancelModel(spec.id) },
-                    onDelete = { vm.deleteModel(spec.id) },
-                )
-                HorizontalDivider()
-            }
-        }
-        Text(
-            stringResource(R.string.model_import_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(vertical = 16.dp),
-        )
+        ColorGrid(selected, onSelect, Modifier.padding(top = 8.dp))
     }
 }
 

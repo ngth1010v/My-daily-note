@@ -41,7 +41,6 @@ internal fun EntryDetailScreen(
     entry: Entry,
     formatters: Formatters,
     defaultColor: String,
-    dark: Boolean,
     onSave: (Entry) -> Unit,
     onDelete: (Entry) -> Unit,
     onClose: () -> Unit,
@@ -87,7 +86,7 @@ internal fun EntryDetailScreen(
                 OutlinedButton(onClick = { pickingTime = true }, modifier = Modifier.fillMaxWidth()) {
                     Text(formatters.date(local.toLocalDate()) + " · " + formatters.time24(local))
                 }
-                StyleFields(color, icon, defaultColor, dark, onColor = { color = it }, onIcon = { icon = it })
+                StyleFields(color, icon, defaultColor, onColor = { color = it }, onIcon = { icon = it })
             }
             Button(
                 enabled = text.isNotBlank(),

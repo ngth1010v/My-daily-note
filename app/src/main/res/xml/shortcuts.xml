@@ -2,17 +2,6 @@
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:enabled="true"
-        android:icon="@drawable/ic_shortcut_mic"
-        android:shortcutDisabledMessage="@string/shortcut_disabled"
-        android:shortcutId="add_voice"
-        android:shortcutShortLabel="@string/shortcut_voice">
-        <intent
-            android:action="io.github.ngth1010v.mydailynote.action.ADD_VOICE"
-            android:targetClass="io.github.ngth1010v.mydailynote.MainActivity"
-            android:targetPackage="io.github.ngth1010v.mydailynote" />
-    </shortcut>
-    <shortcut
-        android:enabled="true"
         android:icon="@drawable/ic_shortcut_edit"
         android:shortcutDisabledMessage="@string/shortcut_disabled"
         android:shortcutId="add_text"

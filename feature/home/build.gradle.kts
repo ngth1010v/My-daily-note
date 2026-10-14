@@ -22,7 +22,6 @@ android {
 
 dependencies {
     implementation(project(":core:ui"))
-    implementation(project(":speech:api"))
     implementation(libs.androidx.paging.compose)
     implementation(libs.androidx.activity.compose)
 }

@@ -41,7 +41,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -68,7 +67,6 @@ import io.github.ngth1010v.mydailynote.feature.home.rememberHomeController
 import io.github.ngth1010v.mydailynote.feature.settings.AppInfo
 import io.github.ngth1010v.mydailynote.feature.settings.SettingsScreen
 import io.github.ngth1010v.mydailynote.feature.settings.SettingsViewModel
-import io.github.ngth1010v.mydailynote.speech.api.PlatformSpeechEngine
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -99,7 +97,7 @@ fun MainScaffold(
 
     val homeVm: HomeViewModel = viewModel(factory = viewModelFactory {
         initializer {
-            HomeViewModel(container.entries, container.settings, container.voice, container.models, container::appLanguage)
+            HomeViewModel(container.entries, container.settings)
         }
     })
     val home = rememberHomeController(homeVm)
@@ -123,7 +121,7 @@ fun MainScaffold(
     ) {
         HorizontalPager(
             state = pager,
-            // While typing or recording, horizontal drags belong to the input, not the pager.
+            // While typing, horizontal drags belong to the input, not the pager.
             userScrollEnabled = !home.isCapturing && !home.isEditing,
             key = { it },
             modifier = Modifier.fillMaxSize(),
@@ -133,16 +131,13 @@ fun MainScaffold(
                 Route.GROUP -> ComingSoon(Route.GROUP, R.string.group_placeholder_body)
                 Route.ANALYSIS -> ComingSoon(Route.ANALYSIS, R.string.analysis_placeholder_body)
                 Route.SETTINGS -> {
-                    val context = LocalContext.current
                     val vm: SettingsViewModel = viewModel(factory = viewModelFactory {
                         initializer {
                             SettingsViewModel(
                                 settingsRepo = container.settings,
                                 entries = container.entries,
                                 backup = container.backup,
-                                models = container.models,
                                 appInfo = AppInfo(BuildConfig.VERSION_NAME, "https://github.com/$REPO_SLUG", REPO_SLUG),
-                                androidEngineAvailable = PlatformSpeechEngine.isSupported(context),
                             )
                         }
                     })

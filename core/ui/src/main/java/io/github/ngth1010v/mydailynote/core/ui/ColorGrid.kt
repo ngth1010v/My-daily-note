@@ -30,12 +30,12 @@ private val CellShape = RoundedCornerShape(6.dp)
 
 /** The full [EntryPalette] as a hue-by-shade table of rounded rectangles; cells stretch to fill the width. */
 @Composable
-fun ColorGrid(selected: String?, dark: Boolean, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
+fun ColorGrid(selected: String?, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         EntryPalette.swatches.chunked(EntryPalette.COLUMNS).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 row.forEach { sw ->
-                    val fill = if (dark) sw.dark else sw.light
+                    val fill = sw.color
                     val isSelected = sw.key == selected
                     Box(
                         Modifier

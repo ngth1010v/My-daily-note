@@ -25,7 +25,7 @@ class BaselineProfileGenerator {
     fun generate() = rule.collect(packageName = PACKAGE, includeInStartupProfile = true) {
         pressHome()
         startActivityAndWait()
-        device.wait(Until.hasObject(By.desc("Add by voice")), TIMEOUT)
+        device.wait(Until.hasObject(By.desc("Add action")), TIMEOUT)
 
         repeat(3) { i ->
             tap(By.desc("Add action"))

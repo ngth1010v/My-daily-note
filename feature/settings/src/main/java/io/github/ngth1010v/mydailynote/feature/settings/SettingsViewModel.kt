@@ -9,8 +9,6 @@ import io.github.ngth1010v.mydailynote.core.data.backup.BackupFormat
 import io.github.ngth1010v.mydailynote.core.data.backup.BackupRepository
 import io.github.ngth1010v.mydailynote.core.data.settings.AppSettings
 import io.github.ngth1010v.mydailynote.core.data.settings.SettingsRepository
-import io.github.ngth1010v.mydailynote.speech.api.ModelManager
-import io.github.ngth1010v.mydailynote.speech.api.ModelState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -54,18 +52,13 @@ class SettingsViewModel(
     private val settingsRepo: SettingsRepository,
     private val entries: EntryRepository,
     private val backup: BackupRepository,
-    private val models: ModelManager,
     val appInfo: AppInfo,
-    /** Whether Android's on-device recognizer exists on this device. */
-    val androidEngineAvailable: Boolean,
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> =
         settingsRepo.settings.stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
 
     val entryCount: StateFlow<Int> = entries.count.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
-
-    val modelStates: StateFlow<Map<String, ModelState>> = models.states
 
     private val _update = MutableStateFlow<UpdateStatus>(UpdateStatus.Idle)
     val update: StateFlow<UpdateStatus> = _update.asStateFlow()
@@ -108,20 +101,6 @@ class SettingsViewModel(
                 onFailure = { UpdateStatus.Failed },
             )
         }
-    }
-
-    // Models
-
-    fun downloadModel(id: String) = models.download(id)
-
-    fun cancelModel(id: String) = models.cancel(id)
-
-    fun deleteModel(id: String) {
-        viewModelScope.launch { models.delete(id) }
-    }
-
-    fun importModel(id: String, open: () -> InputStream?) {
-        viewModelScope.launch { open()?.use { models.import(id, it) } }
     }
 
     // Data

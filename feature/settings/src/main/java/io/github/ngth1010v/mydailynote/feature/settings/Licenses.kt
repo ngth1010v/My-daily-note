@@ -6,13 +6,6 @@ internal val thirdParties = listOf(
     ThirdParty("Kotlin, kotlinx.coroutines", "Apache-2.0", "https://github.com/JetBrains/kotlin"),
     ThirdParty("AndroidX (Compose, Room, Paging, DataStore, Lifecycle, Activity, AppCompat, Core)", "Apache-2.0", "https://developer.android.com/jetpack/androidx"),
     ThirdParty("Material Icons", "Apache-2.0", "https://fonts.google.com/icons"),
-    ThirdParty("Vosk API", "Apache-2.0", "https://github.com/alphacep/vosk-api"),
-    ThirdParty("Vosk models (small en-us 0.15, en-us 0.22 lgraph, small vn 0.4)", "Apache-2.0", "https://alphacephei.com/vosk/models"),
-    ThirdParty("JNA (Java Native Access)", "Apache-2.0 / LGPL-2.1", "https://github.com/java-native-access/jna"),
-    ThirdParty("whisper.cpp, ggml", "MIT", "https://github.com/ggml-org/whisper.cpp"),
-    ThirdParty("OpenAI Whisper models (ggml conversions)", "MIT", "https://github.com/openai/whisper"),
-    ThirdParty("RNNoise", "BSD-3-Clause", "https://github.com/xiph/rnnoise"),
-    ThirdParty("Silero VAD (ggml conversion)", "MIT", "https://github.com/snakers4/silero-vad"),
 )
 
 internal const val MIT_LICENSE = """MIT License

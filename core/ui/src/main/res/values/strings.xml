@@ -19,21 +19,17 @@
 
     <!-- Home -->
     <string name="action_add">Add action</string>
-    <string name="action_add_voice">Add by voice</string>
     <string name="action_save">Save</string>
     <string name="action_cancel">Cancel</string>
-    <string name="action_stop">Stop</string>
-    <string name="action_record_again">Record again</string>
     <string name="action_search">Search</string>
     <string name="action_close_search">Close search</string>
     <string name="input_hint">What did you just do?</string>
     <string name="home_empty_title">Nothing logged yet</string>
-    <string name="home_empty_body">Tap the pencil to type, or the mic to say a small action you just did.</string>
+    <string name="home_empty_body">Tap the pencil to write down a small action you just did.</string>
     <string name="entry_deleted">Action deleted</string>
     <string name="undo">Undo</string>
     <string name="search_hint">Search actions</string>
     <string name="search_no_results">No matching actions</string>
-    <string name="voice_source">Added by voice</string>
 
     <!-- Entry menu & editors -->
     <string name="menu_edit">Edit</string>
@@ -48,54 +44,27 @@
     <string name="icon_label">Icon</string>
     <string name="color_default">Default</string>
     <string name="icon_none">No icon</string>
+    <string name="icon_group_food">Food &amp; drink</string>
+    <string name="icon_group_health">Health &amp; self-care</string>
+    <string name="icon_group_sport">Sport</string>
+    <string name="icon_group_work">Work &amp; study</string>
+    <string name="icon_group_home">Home &amp; chores</string>
+    <string name="icon_group_transport">Transport</string>
+    <string name="icon_group_shopping">Shopping &amp; money</string>
+    <string name="icon_group_fun">Entertainment &amp; hobbies</string>
+    <string name="icon_group_social">Family &amp; social</string>
+    <string name="icon_group_travel">Travel &amp; nature</string>
+    <string name="icon_group_other">Other</string>
     <string name="time_pick_title">Pick a time</string>
     <string name="dialog_ok">OK</string>
     <string name="dialog_close">Close</string>
 
-    <!-- Voice -->
-    <string name="voice_listening">Listening…</string>
-    <string name="voice_refining">Improving accuracy…</string>
-    <string name="voice_edit_hint">Edit if needed, then save</string>
-    <string name="voice_no_match">Didn\'t catch that. Try again.</string>
-    <string name="voice_error_audio">The microphone is unavailable.</string>
-    <string name="voice_error_engine">Voice recognition failed.</string>
-    <string name="voice_error_not_available">This recognition engine isn\'t available on this device. Switch to Vosk in Settings.</string>
-    <string name="voice_permission_title">Microphone access</string>
-    <string name="voice_permission_rationale">My daily note needs the microphone to turn your voice into text. Audio is processed on your phone and never saved or sent anywhere.</string>
-    <string name="voice_permission_denied">Microphone permission is off. You can allow it in system settings.</string>
-    <string name="open_settings">Open settings</string>
-    <string name="voice_language_switched">Voice language: %1$s</string>
-
-    <!-- Models -->
-    <string name="model_needed_title">Download the %1$s voice model?</string>
-    <string name="model_needed_body">Voice recognition runs completely offline, but needs a one-time download of about %1$s. Typing works without it.</string>
-    <string name="model_download">Download</string>
-    <string name="model_import">Import from file</string>
-    <string name="model_downloading">Downloading… %1$d%%</string>
-    <string name="model_installing">Installing…</string>
-    <string name="model_installed">Installed · %1$s</string>
-    <string name="model_not_installed">Not installed · %1$s</string>
-    <string name="model_failed_network">Download failed. Check your connection and try again.</string>
-    <string name="model_failed_checksum">The downloaded file was corrupted. Try again.</string>
-    <string name="model_failed_storage">Not enough storage space.</string>
-    <string name="model_failed_invalid">That file isn\'t a valid model for this slot.</string>
-    <string name="model_delete">Delete</string>
-    <string name="model_large_title">Download %1$s?</string>
-    <string name="model_large_body">This is a large download (%1$s). Wi-Fi is recommended. Bigger models are more accurate but slower and use more memory. You can delete it later in Settings.</string>
-    <string name="model_large_not_now">Not now</string>
-    <string name="model_import_hint">Vosk models are .zip files, Whisper models are ggml .bin files.</string>
-
     <!-- Settings -->
     <string name="section_general">General</string>
-    <string name="section_voice">Voice</string>
     <string name="section_data">Data</string>
     <string name="section_about">About</string>
     <string name="pref_language">App language</string>
     <string name="lang_system">System default</string>
-    <string name="pref_theme">Theme</string>
-    <string name="theme_system">System</string>
-    <string name="theme_light">Light</string>
-    <string name="theme_dark">Dark</string>
     <string name="pref_dynamic_color">Dynamic color</string>
     <string name="pref_dynamic_color_summary">Use colors from your wallpaper (Android 12+)</string>
     <string name="pref_rail_side">Navigation bar side</string>
@@ -109,24 +78,6 @@
     <string name="time_12">12-hour</string>
     <string name="time_24">24-hour</string>
     <string name="pref_default_color">Default action color</string>
-    <string name="pref_voice_language">Voice language</string>
-    <string name="voice_lang_follow">Same as app language</string>
-    <string name="voice_lang_auto">Auto (English / Vietnamese, needs high accuracy pass)</string>
-    <string name="pref_engine">Recognition engine</string>
-    <string name="engine_vosk">Vosk (offline, recommended)</string>
-    <string name="engine_android">Android on-device</string>
-    <string name="engine_android_unavailable">Not available on this device</string>
-    <string name="pref_models">Voice models</string>
-    <string name="pref_models_summary">Download, import or delete offline models</string>
-    <string name="pref_auto_stop">Auto-stop after silence</string>
-    <string name="auto_stop_off">Off (tap to stop)</string>
-    <string name="auto_stop_seconds">%1$s s</string>
-    <string name="pref_high_accuracy">High accuracy pass</string>
-    <string name="pref_high_accuracy_summary">Re-check each recording with Whisper. Slower; needs a Whisper model.</string>
-    <string name="pref_whisper_model">Whisper model</string>
-    <string name="pref_whisper_model_hint">Tiny and base are weak for Vietnamese; small or larger is recommended.</string>
-    <string name="models_section_vosk">Live recognition (Vosk)</string>
-    <string name="models_section_whisper">High accuracy (Whisper)</string>
     <string name="pref_export">Export</string>
     <string name="pref_export_summary">Save all actions to a file</string>
     <string name="export_json">JSON (full backup)</string>
@@ -149,7 +100,7 @@
     <string name="about_license_summary">MIT · free and open source</string>
     <string name="about_oss">Open-source licenses</string>
     <string name="about_privacy">Privacy</string>
-    <string name="privacy_body">No account, no cloud, no tracking. Your actions are stored only on this device. Voice audio is processed on the device and never saved. The internet is used only to download voice models you ask for, and to check GitHub for updates if you turn that on.</string>
+    <string name="privacy_body">No account, no cloud, no tracking. Your actions are stored only on this device. The internet is used only to check GitHub for updates if you turn that on.</string>
     <string name="pref_update_check">Check for updates</string>
     <string name="pref_update_check_summary">Ask GitHub for new releases when opening Settings</string>
     <string name="update_available">Update available: %1$s</string>
@@ -162,10 +113,8 @@
     </plurals>
 
     <!-- Quick capture -->
-    <string name="widget_description">Add an action by voice or text</string>
-    <string name="shortcut_voice">Add by voice</string>
+    <string name="widget_description">Add an action</string>
     <string name="shortcut_text">Add text</string>
     <string name="shortcut_disabled">Not available</string>
-    <string name="tile_label">Add by voice</string>
     <string name="share_label">Save as action</string>
 </resources>

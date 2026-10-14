@@ -3,6 +3,7 @@ package io.github.ngth1010v.mydailynote.core.data.model
 import java.time.Instant
 import java.time.ZoneOffset
 
+/** VOICE: logged by voice input in older versions; kept so their entries and backups still load. */
 enum class EntrySource { TEXT, VOICE }
 
 /** One logged occurrence of a small action. */

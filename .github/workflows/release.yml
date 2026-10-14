@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - uses: actions/setup-java@v4
         with:
@@ -22,9 +20,6 @@ jobs:
           java-version: 21
 
       - uses: gradle/actions/setup-gradle@v4
-
-      - name: Install NDK and CMake
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;30.0.16248370" "cmake;3.22.1" > /dev/null
 
       - name: Restore signing key
         env:
@@ -45,7 +40,7 @@ jobs:
       - name: Unit tests
         run: ./gradlew testDebugUnitTest
 
-      - name: Release APKs
+      - name: Release APK
         run: ./gradlew :app:assembleRelease
 
       - name: Publish

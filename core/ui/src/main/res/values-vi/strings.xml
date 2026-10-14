@@ -15,21 +15,17 @@
 
     <!-- Home -->
     <string name="action_add">Thêm hành động</string>
-    <string name="action_add_voice">Thêm bằng giọng nói</string>
     <string name="action_save">Lưu</string>
     <string name="action_cancel">Hủy</string>
-    <string name="action_stop">Dừng</string>
-    <string name="action_record_again">Ghi lại</string>
     <string name="action_search">Tìm kiếm</string>
     <string name="action_close_search">Đóng tìm kiếm</string>
     <string name="input_hint">Bạn vừa làm gì?</string>
     <string name="home_empty_title">Chưa có ghi chép nào</string>
-    <string name="home_empty_body">Chạm cây bút để gõ, hoặc micro để nói một việc nhỏ bạn vừa làm.</string>
+    <string name="home_empty_body">Chạm cây bút để ghi lại một việc nhỏ bạn vừa làm.</string>
     <string name="entry_deleted">Đã xóa hành động</string>
     <string name="undo">Hoàn tác</string>
     <string name="search_hint">Tìm hành động</string>
     <string name="search_no_results">Không có hành động phù hợp</string>
-    <string name="voice_source">Thêm bằng giọng nói</string>
 
     <!-- Entry menu & editors -->
     <string name="menu_edit">Sửa</string>
@@ -44,54 +40,27 @@
     <string name="icon_label">Biểu tượng</string>
     <string name="color_default">Mặc định</string>
     <string name="icon_none">Không có</string>
+    <string name="icon_group_food">Ăn uống</string>
+    <string name="icon_group_health">Sức khỏe &amp; chăm sóc</string>
+    <string name="icon_group_sport">Thể thao</string>
+    <string name="icon_group_work">Công việc &amp; học tập</string>
+    <string name="icon_group_home">Nhà cửa &amp; việc nhà</string>
+    <string name="icon_group_transport">Di chuyển</string>
+    <string name="icon_group_shopping">Mua sắm &amp; tiền bạc</string>
+    <string name="icon_group_fun">Giải trí &amp; sở thích</string>
+    <string name="icon_group_social">Gia đình &amp; xã hội</string>
+    <string name="icon_group_travel">Du lịch &amp; thiên nhiên</string>
+    <string name="icon_group_other">Khác</string>
     <string name="time_pick_title">Chọn giờ</string>
     <string name="dialog_ok">OK</string>
     <string name="dialog_close">Đóng</string>
 
-    <!-- Voice -->
-    <string name="voice_listening">Đang nghe…</string>
-    <string name="voice_refining">Đang tăng độ chính xác…</string>
-    <string name="voice_edit_hint">Sửa nếu cần, rồi lưu</string>
-    <string name="voice_no_match">Chưa nghe rõ. Hãy thử lại.</string>
-    <string name="voice_error_audio">Không dùng được micro.</string>
-    <string name="voice_error_engine">Nhận dạng giọng nói bị lỗi.</string>
-    <string name="voice_error_not_available">Bộ nhận dạng này không có trên thiết bị. Hãy chuyển sang Vosk trong Cài đặt.</string>
-    <string name="voice_permission_title">Quyền dùng micro</string>
-    <string name="voice_permission_rationale">My daily note cần micro để chuyển giọng nói thành chữ. Âm thanh được xử lý ngay trên điện thoại, không bao giờ được lưu hay gửi đi.</string>
-    <string name="voice_permission_denied">Quyền micro đang tắt. Bạn có thể bật trong cài đặt hệ thống.</string>
-    <string name="open_settings">Mở cài đặt</string>
-    <string name="voice_language_switched">Ngôn ngữ giọng nói: %1$s</string>
-
-    <!-- Models -->
-    <string name="model_needed_title">Tải mô hình giọng nói %1$s?</string>
-    <string name="model_needed_body">Nhận dạng giọng nói chạy hoàn toàn ngoại tuyến, nhưng cần tải một lần khoảng %1$s. Gõ chữ vẫn dùng được khi chưa tải.</string>
-    <string name="model_download">Tải xuống</string>
-    <string name="model_import">Nhập từ tệp</string>
-    <string name="model_downloading">Đang tải… %1$d%%</string>
-    <string name="model_installing">Đang cài đặt…</string>
-    <string name="model_installed">Đã cài · %1$s</string>
-    <string name="model_not_installed">Chưa cài · %1$s</string>
-    <string name="model_failed_network">Tải thất bại. Kiểm tra kết nối rồi thử lại.</string>
-    <string name="model_failed_checksum">Tệp tải về bị hỏng. Hãy thử lại.</string>
-    <string name="model_failed_storage">Không đủ dung lượng lưu trữ.</string>
-    <string name="model_failed_invalid">Tệp này không phải mô hình hợp lệ cho mục này.</string>
-    <string name="model_delete">Xóa</string>
-    <string name="model_large_title">Tải %1$s?</string>
-    <string name="model_large_body">Đây là bản tải lớn (%1$s). Nên dùng Wi-Fi. Mô hình lớn chính xác hơn nhưng chậm hơn và tốn bộ nhớ hơn. Bạn có thể xóa sau trong Cài đặt.</string>
-    <string name="model_large_not_now">Để sau</string>
-    <string name="model_import_hint">Mô hình Vosk là tệp .zip, mô hình Whisper là tệp ggml .bin.</string>
-
     <!-- Settings -->
     <string name="section_general">Chung</string>
-    <string name="section_voice">Giọng nói</string>
     <string name="section_data">Dữ liệu</string>
     <string name="section_about">Thông tin</string>
     <string name="pref_language">Ngôn ngữ ứng dụng</string>
     <string name="lang_system">Theo hệ thống</string>
-    <string name="pref_theme">Giao diện</string>
-    <string name="theme_system">Theo hệ thống</string>
-    <string name="theme_light">Sáng</string>
-    <string name="theme_dark">Tối</string>
     <string name="pref_dynamic_color">Màu động</string>
     <string name="pref_dynamic_color_summary">Dùng màu theo hình nền (Android 12+)</string>
     <string name="pref_rail_side">Vị trí thanh điều hướng</string>
@@ -105,24 +74,6 @@
     <string name="time_12">12 giờ</string>
     <string name="time_24">24 giờ</string>
     <string name="pref_default_color">Màu mặc định của hành động</string>
-    <string name="pref_voice_language">Ngôn ngữ giọng nói</string>
-    <string name="voice_lang_follow">Giống ngôn ngữ ứng dụng</string>
-    <string name="voice_lang_auto">Tự động (Anh / Việt, cần chế độ chính xác cao)</string>
-    <string name="pref_engine">Bộ nhận dạng</string>
-    <string name="engine_vosk">Vosk (ngoại tuyến, khuyên dùng)</string>
-    <string name="engine_android">Android trên thiết bị</string>
-    <string name="engine_android_unavailable">Không có trên thiết bị này</string>
-    <string name="pref_models">Mô hình giọng nói</string>
-    <string name="pref_models_summary">Tải, nhập hoặc xóa mô hình ngoại tuyến</string>
-    <string name="pref_auto_stop">Tự dừng khi im lặng</string>
-    <string name="auto_stop_off">Tắt (chạm để dừng)</string>
-    <string name="auto_stop_seconds">%1$s giây</string>
-    <string name="pref_high_accuracy">Tăng độ chính xác</string>
-    <string name="pref_high_accuracy_summary">Kiểm tra lại mỗi bản ghi bằng Whisper. Chậm hơn; cần mô hình Whisper.</string>
-    <string name="pref_whisper_model">Mô hình Whisper</string>
-    <string name="pref_whisper_model_hint">Tiny và base nhận tiếng Việt kém; nên dùng small trở lên.</string>
-    <string name="models_section_vosk">Nhận dạng trực tiếp (Vosk)</string>
-    <string name="models_section_whisper">Độ chính xác cao (Whisper)</string>
     <string name="pref_export">Xuất dữ liệu</string>
     <string name="pref_export_summary">Lưu tất cả hành động ra tệp</string>
     <string name="export_json">JSON (sao lưu đầy đủ)</string>
@@ -145,7 +96,7 @@
     <string name="about_license_summary">MIT · miễn phí và mã nguồn mở</string>
     <string name="about_oss">Giấy phép mã nguồn mở</string>
     <string name="about_privacy">Quyền riêng tư</string>
-    <string name="privacy_body">Không tài khoản, không đám mây, không theo dõi. Hành động của bạn chỉ được lưu trên thiết bị này. Âm thanh giọng nói được xử lý trên thiết bị và không bao giờ được lưu. Internet chỉ dùng để tải mô hình giọng nói khi bạn yêu cầu, và để kiểm tra bản cập nhật trên GitHub nếu bạn bật tính năng đó.</string>
+    <string name="privacy_body">Không tài khoản, không đám mây, không theo dõi. Hành động của bạn chỉ được lưu trên thiết bị này. Internet chỉ dùng để kiểm tra bản cập nhật trên GitHub nếu bạn bật tính năng đó.</string>
     <string name="pref_update_check">Kiểm tra cập nhật</string>
     <string name="pref_update_check_summary">Hỏi GitHub về phiên bản mới khi mở Cài đặt</string>
     <string name="update_available">Có bản cập nhật: %1$s</string>
@@ -157,10 +108,8 @@
     </plurals>
 
     <!-- Quick capture -->
-    <string name="widget_description">Thêm hành động bằng giọng nói hoặc chữ</string>
-    <string name="shortcut_voice">Thêm bằng giọng nói</string>
+    <string name="widget_description">Thêm hành động</string>
     <string name="shortcut_text">Thêm bằng chữ</string>
     <string name="shortcut_disabled">Không khả dụng</string>
-    <string name="tile_label">Ghi bằng giọng nói</string>
     <string name="share_label">Lưu thành hành động</string>
 </resources>
