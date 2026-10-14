@@ -85,6 +85,7 @@ import io.github.ngth1010v.mydailynote.core.ui.Formatters
 import io.github.ngth1010v.mydailynote.core.ui.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -114,36 +115,58 @@ fun HomeScreen(
     // List index 0 is the scroll-room spacer under the newest row; entries start at index 1.
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = 1)
     val items = vm.items.collectAsLazyPagingItems()
-    var scrollToNewest by remember { mutableStateOf(false) }
+    // A just-saved or restored entry to bring into view once its row is in the list.
+    var scrollToId by remember { mutableStateOf<Long?>(null) }
     var editor by remember { mutableStateOf<EntryEditor?>(null) }
 
     val deletedText = stringResource(R.string.entry_deleted)
     val undoText = stringResource(R.string.undo)
 
+    // Nothing here may suspend for long or be cancelled from outside: a CancellationException (say, from
+    // a scroll cut short by another scroll) would end this collector and every later event would be lost.
     LaunchedEffect(vm) {
         vm.eventFlow.collect { event ->
             when (event) {
-                HomeEvent.Saved -> {
+                is HomeEvent.Saved -> {
                     view.performHapticFeedback(
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.CONFIRM
                         else HapticFeedbackConstants.KEYBOARD_TAP
                     )
-                    scrollToNewest = true
-                    listState.animateScrollToItem(1)
+                    scrollToId = event.id
                 }
-                is HomeEvent.Deleted -> {
+                is HomeEvent.Deleted -> launch {
                     val r = controller.snackbar.showSnackbar(deletedText, undoText, duration = SnackbarDuration.Short)
-                    if (r == SnackbarResult.ActionPerformed) vm.undoDelete(event.id)
+                    if (r == SnackbarResult.ActionPerformed) {
+                        vm.undoDelete(event.id)
+                        scrollToId = event.id
+                    }
                 }
             }
         }
     }
-    // The new row arrives with the next page refresh; keep the newest visible once it does.
-    LaunchedEffect(items.itemCount) {
-        if (scrollToNewest) {
-            listState.animateScrollToItem(1)
-            scrollToNewest = false
+    // The row arrives with a page refresh that can land before or after the event; scroll once it's
+    // there. A scroll cut short (by a refresh restarting this effect) is simply redone.
+    LaunchedEffect(scrollToId, items.itemCount) {
+        val id = scrollToId ?: return@LaunchedEffect
+        val index = items.itemSnapshotList.indexOfFirst { (it as? HomeItem.Row)?.entry?.id == id }
+        if (index < 0) {
+            // Not loaded (yet): wait for the next refresh, but not forever.
+            delay(3_000)
+            scrollToId = null
+            return@LaunchedEffect
         }
+        // Matched by key, so a layout not yet updated for the refresh can't pass for the row.
+        val info = listState.layoutInfo
+        val key = items.itemSnapshotList[index]?.key
+        val shown = info.visibleItemsInfo.firstOrNull { it.key == key }
+        val fullyShown = shown != null && shown.offset >= 0 &&
+            shown.offset + shown.size <= info.viewportEndOffset - info.afterContentPadding
+        if (!fullyShown) {
+            listState.animateScrollToItem(index + 1)
+            // The closing keyboard resizes the list meanwhile; land exactly on the row.
+            listState.scrollToItem(index + 1)
+        }
+        scrollToId = null
     }
     // Height of the spacer under the newest row: just enough to scroll today's header up to the top edge.
     val bottomPadPx = with(LocalDensity.current) { 8.dp.roundToPx() }

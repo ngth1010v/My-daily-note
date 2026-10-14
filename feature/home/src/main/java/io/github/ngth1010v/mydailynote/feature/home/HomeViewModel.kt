@@ -57,8 +57,8 @@ sealed interface InputMode {
 }
 
 sealed interface HomeEvent {
-    /** An entry was saved: scroll to the newest and confirm with a haptic tick. */
-    data object Saved : HomeEvent
+    /** Entry [id] was saved: scroll to it and confirm with a haptic tick. */
+    data class Saved(val id: Long) : HomeEvent
     data class Deleted(val id: Long) : HomeEvent
 }
 
@@ -149,11 +149,11 @@ class HomeViewModel(
         viewModelScope.launch {
             // The same text as a past action (ignoring case and accents) logs that action again. A new
             // one gets a color and icon picked from how it relates to past ones.
-            if (entries.addAsExisting(value, EntrySource.TEXT) == null) {
+            val id = entries.addAsExisting(value, EntrySource.TEXT) ?: run {
                 val style = withContext(Dispatchers.Default) { autoStyle().pick(value, entries.styleHistory()) }
                 entries.add(value, EntrySource.TEXT, style.color, style.icon)
             }
-            events.send(HomeEvent.Saved)
+            events.send(HomeEvent.Saved(id))
         }
     }
 
@@ -162,8 +162,8 @@ class HomeViewModel(
         text = ""
         mode = InputMode.Idle
         viewModelScope.launch {
-            if (entries.addAsExisting(s.text, EntrySource.TEXT) == null) entries.add(s.text, EntrySource.TEXT, s.color, s.icon)
-            events.send(HomeEvent.Saved)
+            val id = entries.addAsExisting(s.text, EntrySource.TEXT) ?: entries.add(s.text, EntrySource.TEXT, s.color, s.icon)
+            events.send(HomeEvent.Saved(id))
         }
     }
 
