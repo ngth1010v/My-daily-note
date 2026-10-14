@@ -4,6 +4,9 @@ import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -55,6 +58,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -154,6 +160,15 @@ fun HomeScreen(
                 if (atRest && room > 0) listState.requestScrollToItem(1)
             }
     }
+    // Rows laid out while the list opens fade in one after another; later ones (scrolled in) don't.
+    val intro = remember { ListIntro() }
+    val loaded = items.loadState.refresh is LoadState.NotLoading
+    LaunchedEffect(loaded) {
+        if (loaded) {
+            delay(800)
+            intro.active = false
+        }
+    }
     LaunchedEffect(launch) {
         when (launch) {
             null -> return@LaunchedEffect
@@ -196,8 +211,11 @@ fun HomeScreen(
                             contentType = items.itemContentType { if (it is HomeItem.Row) 0 else 1 },
                         ) { index ->
                             when (val item = items[index]) {
-                                is HomeItem.Row -> EntryRow(item.entry, formatters, onEntryAction, onOpen, vm::delete)
-                                is HomeItem.Header -> DayHeader(formatters.day(item.day, today))
+                                is HomeItem.Row -> EntryRow(
+                                    item.entry, formatters, onEntryAction, onOpen, vm::delete,
+                                    modifier = Modifier.animateItem().rowReveal(listState, item.key, intro),
+                                )
+                                is HomeItem.Header -> DayHeader(formatters.day(item.day, today), Modifier.animateItem())
                                 null -> Spacer(Modifier.height(40.dp))
                             }
                         }
@@ -270,10 +288,11 @@ private fun EntryRow(
     onOpen: (Entry) -> Unit,
     onDelete: (Entry) -> Unit,
     showDate: Boolean = false,
+    modifier: Modifier = Modifier,
 ) {
     var menu by remember { mutableStateOf(false) }
     val local = entry.achievedAt.atOffset(entry.zoneOffset)
-    Box {
+    Box(modifier) {
         Row(
             Modifier
                 .fillMaxWidth()
@@ -321,13 +340,57 @@ private fun EntryRow(
     }
 }
 
+/** Staggers the fade-in of the rows laid out while the list opens, newest (bottom) first. */
+private class ListIntro {
+    var active = true
+    private var started = 0
+    fun nextDelay(): Long = (started++ * 40L).coerceAtMost(320L)
+}
+
+/**
+ * Fades and shrinks a row as it slides past the top or bottom edge of the list (driven by the
+ * scroll position, so it reverses when the row comes back), and plays the [intro] fade-in.
+ */
 @Composable
-private fun DayHeader(label: String) {
+private fun Modifier.rowReveal(listState: LazyListState, key: Any, intro: ListIntro): Modifier {
+    val enter = remember { Animatable(if (intro.active) 0f else 1f) }
+    var placed by remember { mutableStateOf(false) }
+    // Wait for placement: prefetched rows are composed before they're on screen.
+    LaunchedEffect(placed) {
+        if (!placed || enter.value == 1f) return@LaunchedEffect
+        if (!intro.active) return@LaunchedEffect enter.snapTo(1f)
+        delay(intro.nextDelay())
+        enter.animateTo(1f, tween(320, easing = FastOutSlowInEasing))
+    }
+    return onPlaced { placed = true }.graphicsLayer {
+        var visible = 1f
+        var originY = 0.5f
+        val info = listState.layoutInfo
+        info.visibleItemsInfo.firstOrNull { it.key == key }?.let { item ->
+            val clipStart = (info.viewportStartOffset - item.offset).coerceAtLeast(0)
+            val clipEnd = (item.offset + item.size - info.viewportEndOffset).coerceAtLeast(0)
+            if (item.size > 0) visible = (1f - (clipStart + clipEnd).toFloat() / item.size).coerceIn(0f, 1f)
+            // Shrink toward the side still on screen.
+            val clippedAtTop = if (info.reverseLayout) clipEnd > 0 else clipStart > 0
+            originY = if (clippedAtTop) 1f else 0f
+        }
+        val e = enter.value
+        alpha = e * visible
+        val scale = 0.9f + 0.1f * minOf(e, visible)
+        scaleX = scale
+        scaleY = scale
+        transformOrigin = TransformOrigin(0.5f, originY)
+        translationY = (1f - e) * 16.dp.toPx()
+    }
+}
+
+@Composable
+private fun DayHeader(label: String, modifier: Modifier = Modifier) {
     Text(
         label,
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 4.dp),
+        modifier = modifier.fillMaxWidth().padding(top = 20.dp, bottom = 4.dp),
     )
 }
 
@@ -402,7 +465,7 @@ private fun SearchContent(
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             items(results, key = { it.id }) { entry ->
-                EntryRow(entry, formatters, onEditor, onOpen, vm::delete, showDate = true)
+                EntryRow(entry, formatters, onEditor, onOpen, vm::delete, showDate = true, modifier = Modifier.animateItem())
             }
         }
     }
