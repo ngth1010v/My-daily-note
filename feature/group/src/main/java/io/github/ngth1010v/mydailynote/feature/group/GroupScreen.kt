@@ -252,8 +252,8 @@ private val idSetSaver = Saver<MutableState<Set<Long>>, LongArray>(
 
 private val RowRadius = 16.dp
 private val PanelRadius = 20.dp
-private val GroupRowHeight = 72.dp
-private val ActionRowHeight = 64.dp
+private val GroupRowHeight = 57.6.dp
+private val ActionRowHeight = 51.2.dp
 private val ActionIndent = 20.dp
 
 /** A row's own rounded background; every row (groups, actions, the add rows) is one. */
