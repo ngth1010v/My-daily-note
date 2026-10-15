@@ -2,6 +2,7 @@ package io.github.ngth1010v.mydailynote.core.data.backup
 
 import androidx.room.withTransaction
 import io.github.ngth1010v.mydailynote.core.data.db.AppDatabase
+import io.github.ngth1010v.mydailynote.core.data.model.TextNormalizer
 import io.github.ngth1010v.mydailynote.core.data.toEntity
 import io.github.ngth1010v.mydailynote.core.data.toModel
 import java.io.InputStream
@@ -15,13 +16,19 @@ class BackupRepository(
     private val clock: Clock = Clock.systemDefaultZone(),
 ) {
     private val dao = db.entryDao()
+    private val groupDao = db.groupDao()
 
     /** Writes all live entries; returns how many were written. */
     suspend fun export(format: BackupFormat, out: OutputStream): Int {
         val entries = dao.allForExport().map { it.toModel() }
         val text = when (format) {
             BackupFormat.JSON -> BackupCodec.encodeJson(
-                BackupData(dao.allGroups().map { it.toModel() }, entries), clock.instant(),
+                BackupData(
+                    groupDao.groups().map { it.toModel() },
+                    entries,
+                    groupDao.actions().map { it.toModel() },
+                ),
+                clock.instant(),
             )
             BackupFormat.CSV -> "\uFEFF" + BackupCodec.encodeCsv(entries) // BOM so Excel reads UTF-8
         }
@@ -41,10 +48,23 @@ class BackupRepository(
             BackupFormat.CSV -> BackupData(emptyList(), BackupCodec.decodeCsv(text))
         }
         return db.withTransaction {
-            // Groups with the same name are reused, so importing twice doesn't duplicate them.
-            val byName = dao.allGroups().associate { it.name to it.id }
-            val groupIds = data.groups.associate { g ->
-                g.id to (byName[g.name] ?: dao.insertGroup(g.copy(id = 0).toEntity()))
+            // Groups with the same name are reused, so importing twice doesn't duplicate them; the
+            // built-in group maps to this device's.
+            val local = groupDao.groups()
+            val byName = local.filterNot { it.isDefault }.associate { it.name to it.id }
+            var nextPosition = (local.maxOfOrNull { it.position } ?: -1) + 1
+            val groupIds = data.groups.sortedBy { it.position }.associate { g ->
+                val existing = if (g.isDefault) local.firstOrNull { it.isDefault }?.id else byName[g.name]
+                g.id to (existing ?: groupDao.insertGroup(g.copy(id = 0, position = nextPosition++).toEntity()))
+            }
+            // Actions this device doesn't have yet join their group, after its current actions.
+            data.actions.sortedBy { it.position }.forEach { a ->
+                val groupId = groupIds[a.groupId] ?: return@forEach
+                if (groupDao.actionWithText(TextNormalizer.normalize(a.text)) == null) {
+                    groupDao.insertAction(
+                        a.copy(id = 0, groupId = groupId, position = groupDao.nextActionPosition(groupId)).toEntity()
+                    )
+                }
             }
             val existing = dao.allKeys().toHashSet()
             val now = clock.instant()

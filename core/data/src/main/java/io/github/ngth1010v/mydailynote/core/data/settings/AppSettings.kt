@@ -17,4 +17,8 @@ data class AppSettings(
     val timeFormat: TimeFormat = TimeFormat.SYSTEM,
     val autoBackup: Boolean = false,
     val updateCheck: Boolean = false,
+    /** Put each new action in the group it fits best (else in the built-in "Other" group). */
+    val autoGroupActions: Boolean = true,
+    /** With [autoGroupActions]: make a group when none fits. */
+    val autoCreateGroups: Boolean = true,
 )

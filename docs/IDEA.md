@@ -134,7 +134,22 @@ interface SpeechEngine {
 ---
 
 ## 5. Group screen
-Placeholder — *"Coming soon"*. Future: cluster repeated entries (auto-suggest by similar text), manage group name/color/icon/description.
+
+- **Action** = a distinct text (ignoring case/accents); every action is in exactly one **group**, a group may be empty.
+- Each group: icon, name, color, description. One row per group; tapping its chevron opens a panel of its
+  actions (indented rows with count + last logged, a "log now" button) ending in **New action**.
+- **Long-press any row to drag:** dragging a group closes every group and reopens them on drop; dragging
+  an action moves it among all open groups. Holding it over a closed group opens it; dropping on a
+  closed group adds it at the end.
+- Full-width **Add group** row after the last group.
+- **Auto-group** (Settings → Groups, each toggle separate): a new action goes to the group whose name or
+  actions are most related (same embeddings as auto-style); else to the group made for its icon
+  category; else a new group is created, named after the category ("Food & drink", "Sport"…), with that
+  category's icon and the least-used hue. No description is generated.
+- Built-in **Other** group catches what fits nowhere (and the actions of deleted groups); it can be
+  renamed and moved but not deleted. Deletes have Undo.
+- Editing an action's color/icon applies to all its entries; renaming it renames them (merging into an
+  existing action with that text).
 
 ## 6. Analysis screen
 Placeholder — *"Coming soon"*. Future: frequency per group, streaks, time-of-day heatmap, day/week/month views.
@@ -180,7 +195,8 @@ Entry {
   source (TEXT | VOICE), deletedAt?
 }
 
-Group { id, name, color, icon, description, createdAt }   // used later
+Group  { id, name, color, icon, description, createdAt, position, isDefault, category? }
+Action { id, text, searchText (unique), groupId, position, color, icon, createdAt }  // entries join by searchText
 
 Indexes: Entry(achievedAt), Entry(groupId)
 FTS4   : Entry.text + diacritic-free copy (Vietnamese search: "ca phe" matches "cà phê")

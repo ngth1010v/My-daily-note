@@ -6,7 +6,6 @@
     <string name="nav_analysis">Phân tích</string>
     <string name="nav_settings">Cài đặt</string>
     <string name="coming_soon">Sắp ra mắt</string>
-    <string name="group_placeholder_body">Gom các hành động lặp lại thành nhóm.</string>
     <string name="analysis_placeholder_body">Xem chuỗi ngày, tần suất và thói quen của bạn.</string>
 
     <!-- Days -->
@@ -118,4 +117,35 @@
     <string name="shortcut_text">Thêm bằng chữ</string>
     <string name="shortcut_disabled">Không khả dụng</string>
     <string name="share_label">Lưu thành hành động</string>
+
+    <!-- Nhóm -->
+    <string name="group_default_name">Khác</string>
+    <string name="group_hint">Nhấn giữ một dòng để di chuyển</string>
+    <string name="group_add">Thêm nhóm</string>
+    <string name="group_new_title">Nhóm mới</string>
+    <string name="group_edit_title">Sửa nhóm</string>
+    <string name="group_name">Tên</string>
+    <string name="group_expand">Hiện hành động</string>
+    <string name="group_collapse">Ẩn hành động</string>
+    <string name="group_deleted">Đã xóa nhóm, hành động được chuyển sang %1$s</string>
+    <string name="group_default_note">Hành động không hợp nhóm nào sẽ vào đây. Không thể xóa nhóm này.</string>
+    <string name="action_new">Hành động mới</string>
+    <string name="action_new_title">Hành động mới</string>
+    <string name="action_exists">Hành động này đã có</string>
+    <string name="action_merged">Đã gộp vào “%1$s”</string>
+    <string name="action_log_now">Ghi lại ngay</string>
+    <string name="action_logged">Đã ghi “%1$s”</string>
+    <string name="action_never">Chưa ghi lần nào</string>
+    <string name="action_last">%1$s · lần cuối %2$s</string>
+    <plurals name="times_count">
+        <item quantity="other">%d lần</item>
+    </plurals>
+    <plurals name="action_delete_entries">
+        <item quantity="other">Xóa nó cũng sẽ xóa %d lần đã ghi.</item>
+    </plurals>
+    <string name="section_groups">Nhóm</string>
+    <string name="pref_auto_group">Tự xếp hành động mới vào nhóm</string>
+    <string name="pref_auto_group_summary">Đưa mỗi hành động mới vào nhóm phù hợp nhất</string>
+    <string name="pref_auto_create_groups">Tự tạo nhóm</string>
+    <string name="pref_auto_create_groups_summary">Khi không có nhóm phù hợp, tạo nhóm theo loại hành động</string>
 </resources>

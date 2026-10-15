@@ -28,14 +28,33 @@ data class Entry(
     val icon: String? get() = iconOverride ?: groupIcon
 }
 
-/** A reusable "kind of action". The Group screen is not built yet; entries can already point to one. */
+/** A reusable "kind of action": a named, ordered set of [Action]s. */
 data class Group(
     val id: Long = 0,
+    /** Blank for the built-in group until renamed: show the localized "Other" then. */
     val name: String,
     val color: String? = null,
     val icon: String? = null,
     val description: String? = null,
     val createdAt: Instant,
+    val position: Int = 0,
+    /** The built-in group catching unrouted actions; can't be deleted. */
+    val isDefault: Boolean = false,
+    /** Icon category it was auto-created for, if any. */
+    val category: Int? = null,
+)
+
+/** A distinct action text in a group, with how often and when it was last logged. */
+data class Action(
+    val id: Long = 0,
+    val text: String,
+    val groupId: Long,
+    val position: Int = 0,
+    val color: String? = null,
+    val icon: String? = null,
+    val createdAt: Instant,
+    val count: Int = 0,
+    val lastAt: Instant? = null,
 )
 
 /** A previously logged text, offered for one-tap re-logging. */

@@ -70,10 +70,13 @@ class AutoStyle(
         return candidates.randomOrNull(random)?.let { (r, c) -> palette[r][c] }
     }
 
-    /** The least used hue (random among ties), in a mid shade. */
-    private fun freshColor(history: List<StyledText>): String {
+    private fun freshColor(history: List<StyledText>): String = freshColor(history.map { it.color })
+
+    /** The hue least used by [colors] (random among ties), in a mid shade. */
+    @Synchronized
+    fun freshColor(colors: Collection<String?>): String {
         val used = IntArray(palette.first().size)
-        history.forEach { h -> cells[h.color]?.let { used[it.second]++ } }
+        colors.forEach { c -> cells[c]?.let { used[it.second]++ } }
         val least = used.min()
         val col = used.indices.filter { used[it] == least }.random(random)
         return palette[(1..3).random(random)][col]

@@ -3,6 +3,7 @@ package io.github.ngth1010v.mydailynote.core.data
 import io.github.ngth1010v.mydailynote.core.data.backup.BackupCodec
 import io.github.ngth1010v.mydailynote.core.data.backup.BackupData
 import io.github.ngth1010v.mydailynote.core.data.backup.BackupFormatException
+import io.github.ngth1010v.mydailynote.core.data.model.Action
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
 import io.github.ngth1010v.mydailynote.core.data.model.EntrySource
 import io.github.ngth1010v.mydailynote.core.data.model.Group
@@ -71,6 +72,28 @@ class BackupCodecTest {
         val back = BackupCodec.decodeJson(json)
         assertEquals(groups, back.groups)
         assertEquals(entries.map { it.copy(updatedAt = Instant.EPOCH) }, back.entries.map { it.copy(updatedAt = Instant.EPOCH) })
+    }
+
+    @Test fun jsonKeepsGroupOrderAndActions() {
+        val groups = listOf(
+            Group(5, "Drink", "blue", "water", null, Instant.parse("2026-01-01T00:00:00Z"), position = 1, category = 0),
+            Group(6, "", null, null, null, Instant.parse("2026-01-02T00:00:00Z"), position = 0, isDefault = true),
+        )
+        val actions = listOf(
+            Action(text = "uống nước", groupId = 5, position = 0, color = "blue", icon = "water", createdAt = Instant.EPOCH),
+            Action(text = "đọc sách", groupId = 6, position = 3, createdAt = Instant.EPOCH),
+        )
+        val back = BackupCodec.decodeJson(BackupCodec.encodeJson(BackupData(groups, entries, actions), Instant.EPOCH))
+        assertEquals(groups, back.groups)
+        assertEquals(actions, back.actions)
+    }
+
+    @Test fun jsonV1WithoutActionsStillLoads() {
+        val v1 = """{"app":"my-daily-note","version":1,"groups":[{"id":1,"name":"Sport","createdAt":"2026-01-01T00:00:00Z"}],"entries":[]}"""
+        val back = BackupCodec.decodeJson(v1)
+        assertEquals(0, back.groups.single().position)
+        assertEquals(false, back.groups.single().isDefault)
+        assertEquals(emptyList<Action>(), back.actions)
     }
 
     @Test fun csvRoundTrip() {

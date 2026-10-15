@@ -37,6 +37,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +61,8 @@ import io.github.ngth1010v.mydailynote.core.ui.RailButton
 import io.github.ngth1010v.mydailynote.core.ui.RailButtonGap
 import io.github.ngth1010v.mydailynote.core.ui.RailButtonSize
 import io.github.ngth1010v.mydailynote.core.ui.RailReservedWidth
+import io.github.ngth1010v.mydailynote.feature.group.GroupScreen
+import io.github.ngth1010v.mydailynote.feature.group.GroupViewModel
 import io.github.ngth1010v.mydailynote.feature.home.HomeLaunch
 import io.github.ngth1010v.mydailynote.feature.home.HomeRailActions
 import io.github.ngth1010v.mydailynote.feature.home.HomeScreen
@@ -97,10 +103,15 @@ fun MainScaffold(
 
     val homeVm: HomeViewModel = viewModel(factory = viewModelFactory {
         initializer {
-            HomeViewModel(container.entries, container.settings) { container.autoStyle }
+            HomeViewModel(
+                container.entries, container.groups, container.settings,
+                autoStyle = { container.autoStyle },
+                autoGroup = { container.autoGroup },
+            )
         }
     })
     val home = rememberHomeController(homeVm)
+    var groupDragging by remember { mutableStateOf(false) }
 
     // Which physical side the rail sits on, expressed as layout start/end.
     val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
@@ -121,14 +132,25 @@ fun MainScaffold(
     ) {
         HorizontalPager(
             state = pager,
-            // While typing, horizontal drags belong to the input, not the pager.
-            userScrollEnabled = !home.isCapturing && !home.isEditing,
+            // While typing, horizontal drags belong to the input, not the pager; so do drags of Group rows.
+            userScrollEnabled = !home.isCapturing && !home.isEditing && !groupDragging,
             key = { it },
             modifier = Modifier.fillMaxSize(),
         ) { page ->
             when (Route.entries[page]) {
                 Route.HOME -> HomeScreen(home, railPadding, launch, onLaunchHandled)
-                Route.GROUP -> ComingSoon(Route.GROUP, R.string.group_placeholder_body)
+                Route.GROUP -> {
+                    val vm: GroupViewModel = viewModel(factory = viewModelFactory {
+                        initializer { GroupViewModel(container.groups, container.entries) { container.autoStyle } }
+                    })
+                    GroupScreen(
+                        vm,
+                        railPadding = railPadding,
+                        // The rail's height (route buttons + paddings), so the last row can scroll above it.
+                        bottomClearance = (RailButtonSize + RailButtonGap) * Route.entries.size + 32.dp,
+                        onDragging = { groupDragging = it },
+                    )
+                }
                 Route.ANALYSIS -> ComingSoon(Route.ANALYSIS, R.string.analysis_placeholder_body)
                 Route.SETTINGS -> {
                     val vm: SettingsViewModel = viewModel(factory = viewModelFactory {

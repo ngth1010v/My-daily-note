@@ -3,6 +3,9 @@ package io.github.ngth1010v.mydailynote
 import android.app.Application
 import android.content.Context
 import io.github.ngth1010v.mydailynote.core.data.EntryRepository
+import io.github.ngth1010v.mydailynote.core.data.GroupCategory
+import io.github.ngth1010v.mydailynote.core.data.GroupRepository
+import io.github.ngth1010v.mydailynote.core.data.autostyle.AutoGroup
 import io.github.ngth1010v.mydailynote.core.data.autostyle.AutoStyle
 import io.github.ngth1010v.mydailynote.core.data.autostyle.IconMeaning
 import io.github.ngth1010v.mydailynote.core.data.autostyle.TextEmbedder
@@ -36,15 +39,32 @@ class AppContainer(private val context: Context) {
     val database by lazy { AppDatabase.create(context) }
     val settings by lazy { SettingsRepository(context) }
     val entries by lazy { EntryRepository(database) }
+    val groups by lazy {
+        GroupRepository(database, categories = {
+            // Named in the current language when the group is made; the user can rename it.
+            EntryIcons.groups.map { GroupCategory(context.getString(it.title), it.icons.first().key) }
+        })
+    }
     val backup by lazy { BackupRepository(database) }
 
     /** Loads the ~7 MB embedding model on first use (~150 ms on an emulator): touch it off the main thread. */
+    private val embedder by lazy { context.assets.open("autostyle/embeddings.bin").use(::TextEmbedder) }
+
+    /** Slow on first use (loads the embedding model): touch it off the main thread. */
     val autoStyle by lazy {
-        val embedder = context.assets.open("autostyle/embeddings.bin").use(::TextEmbedder)
         AutoStyle(
             embed = embedder::embed,
             icons = EntryIcons.groups.flatMapIndexed { g, group -> group.icons.map { IconMeaning(it.key, g, it.meaning) } },
             palette = EntryPalette.swatches.chunked(EntryPalette.COLUMNS).map { row -> row.map { it.key } },
+        )
+    }
+
+    /** Slow on first use (loads the embedding model): touch it off the main thread. */
+    val autoGroup by lazy {
+        AutoGroup(
+            embed = embedder::embed,
+            iconCategory = EntryIcons.groups.flatMapIndexed { g, group -> group.icons.map { it.key to g } }.toMap(),
+            otherCategory = EntryIcons.groups.lastIndex,
         )
     }
 }

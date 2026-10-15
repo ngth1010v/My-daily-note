@@ -1,5 +1,6 @@
 package io.github.ngth1010v.mydailynote.core.data.backup
 
+import io.github.ngth1010v.mydailynote.core.data.model.Action
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
 import io.github.ngth1010v.mydailynote.core.data.model.EntrySource
 import io.github.ngth1010v.mydailynote.core.data.model.Group
@@ -13,17 +14,18 @@ enum class BackupFormat(val mimeType: String, val extension: String) {
     CSV("text/csv", "csv"),
 }
 
-data class BackupData(val groups: List<Group>, val entries: List<Entry>)
+data class BackupData(val groups: List<Group>, val entries: List<Entry>, val actions: List<Action> = emptyList())
 
 class BackupFormatException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /**
  * Converts entries to/from the export formats.
- * - JSON is lossless (groups, both timestamps, color/icon, source).
+ * - JSON is lossless (groups and their actions, both timestamps, color/icon, source).
  * - CSV is for spreadsheets: one row per entry, achieved time as ISO-8601 with offset.
  */
 object BackupCodec {
-    const val JSON_VERSION = 1
+    /** 2: group position/default/category and actions. */
+    const val JSON_VERSION = 2
     private const val APP_ID = "my-daily-note"
     val CSV_HEADER = listOf("achieved_at", "text", "description", "color", "icon", "source")
 
@@ -40,7 +42,21 @@ object BackupCodec {
                     .putOpt("color", g.color)
                     .putOpt("icon", g.icon)
                     .putOpt("description", g.description)
-                    .put("createdAt", g.createdAt.toString()))
+                    .put("createdAt", g.createdAt.toString())
+                    .put("position", g.position)
+                    .put("isDefault", g.isDefault)
+                    .putOpt("category", g.category))
+            }
+        })
+        root.put("actions", JSONArray().apply {
+            data.actions.forEach { a ->
+                put(JSONObject()
+                    .put("text", a.text)
+                    .put("groupId", a.groupId)
+                    .put("position", a.position)
+                    .putOpt("color", a.color)
+                    .putOpt("icon", a.icon)
+                    .put("createdAt", a.createdAt.toString()))
             }
         })
         root.put("entries", JSONArray().apply {
@@ -70,6 +86,19 @@ object BackupCodec {
                 icon = o.optStringOrNull("icon"),
                 description = o.optStringOrNull("description"),
                 createdAt = Instant.parse(o.getString("createdAt")),
+                position = o.optInt("position", 0),
+                isDefault = o.optBoolean("isDefault", false),
+                category = if (o.has("category") && !o.isNull("category")) o.getInt("category") else null,
+            )
+        }
+        val actions = root.optJSONArray("actions").objects().map { o ->
+            Action(
+                text = o.getString("text"),
+                groupId = o.getLong("groupId"),
+                position = o.optInt("position", 0),
+                color = o.optStringOrNull("color"),
+                icon = o.optStringOrNull("icon"),
+                createdAt = Instant.parse(o.getString("createdAt")),
             )
         }
         val entries = root.optJSONArray("entries").objects().map { o ->
@@ -86,7 +115,7 @@ object BackupCodec {
                 source = parseSource(o.optStringOrNull("source")),
             )
         }
-        BackupData(groups, entries)
+        BackupData(groups, entries, actions)
     } catch (e: BackupFormatException) {
         throw e
     } catch (e: Exception) {

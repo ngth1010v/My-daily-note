@@ -79,6 +79,8 @@ class EntryRepository(
             dao.setStyle(e.id, picked.color, picked.icon)
             if (known.add(e.searchText)) history.add(0, StyledText(e.text, picked.color, picked.icon))
         }
+        // Each action takes the look its entries now have.
+        db.groupDao().copyStylesFromEntries()
         all.size
     }
 

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
 import io.github.ngth1010v.mydailynote.core.ui.Formatters
 import io.github.ngth1010v.mydailynote.core.ui.R
+import io.github.ngth1010v.mydailynote.core.ui.StyleFields
 import java.time.Instant
 import java.time.ZoneId
 

@@ -87,12 +87,6 @@ interface EntryDao {
     @Query("SELECT COUNT(*) FROM entries WHERE deletedAt IS NULL")
     fun count(): Flow<Int>
 
-    @Query("SELECT * FROM action_groups ORDER BY name")
-    suspend fun allGroups(): List<GroupEntity>
-
-    @Insert
-    suspend fun insertGroup(group: GroupEntity): Long
-
     @Query("DELETE FROM entries")
     suspend fun deleteAllEntries()
 

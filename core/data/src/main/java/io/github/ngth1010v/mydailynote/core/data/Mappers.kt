@@ -1,8 +1,11 @@
 package io.github.ngth1010v.mydailynote.core.data
 
+import io.github.ngth1010v.mydailynote.core.data.db.ActionEntity
+import io.github.ngth1010v.mydailynote.core.data.db.ActionWithStats
 import io.github.ngth1010v.mydailynote.core.data.db.EntryEntity
 import io.github.ngth1010v.mydailynote.core.data.db.EntryWithGroup
 import io.github.ngth1010v.mydailynote.core.data.db.GroupEntity
+import io.github.ngth1010v.mydailynote.core.data.model.Action
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
 import io.github.ngth1010v.mydailynote.core.data.model.EntrySource
 import io.github.ngth1010v.mydailynote.core.data.model.Group
@@ -51,13 +54,44 @@ internal fun GroupEntity.toModel() = Group(
     icon = icon,
     description = description,
     createdAt = Instant.ofEpochMilli(createdAt),
+    position = position,
+    isDefault = isDefault,
+    category = category,
 )
 
 internal fun Group.toEntity() = GroupEntity(
     id = id,
-    name = name,
+    name = name.trim(),
     color = color,
     icon = icon,
-    description = description,
+    description = description?.trim()?.takeIf { it.isNotEmpty() },
+    createdAt = createdAt.toEpochMilli(),
+    position = position,
+    isDefault = isDefault,
+    category = category,
+)
+
+internal fun ActionWithStats.toModel() = action.toModel(count, lastAt)
+
+internal fun ActionEntity.toModel(count: Int = 0, lastAt: Long? = null) = Action(
+    id = id,
+    text = text,
+    groupId = groupId,
+    position = position,
+    color = color,
+    icon = icon,
+    createdAt = Instant.ofEpochMilli(createdAt),
+    count = count,
+    lastAt = lastAt?.let(Instant::ofEpochMilli),
+)
+
+internal fun Action.toEntity() = ActionEntity(
+    id = id,
+    text = text.trim(),
+    searchText = TextNormalizer.normalize(text),
+    groupId = groupId,
+    position = position,
+    color = color,
+    icon = icon,
     createdAt = createdAt.toEpochMilli(),
 )

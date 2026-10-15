@@ -11,7 +11,10 @@ import androidx.paging.cachedIn
 import androidx.paging.insertSeparators
 import androidx.paging.map
 import io.github.ngth1010v.mydailynote.core.data.EntryRepository
+import io.github.ngth1010v.mydailynote.core.data.GroupRepository
+import io.github.ngth1010v.mydailynote.core.data.autostyle.AutoGroup
 import io.github.ngth1010v.mydailynote.core.data.autostyle.AutoStyle
+import io.github.ngth1010v.mydailynote.core.data.autostyle.Style
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
 import io.github.ngth1010v.mydailynote.core.data.model.EntrySource
 import io.github.ngth1010v.mydailynote.core.data.model.Suggestion
@@ -25,6 +28,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -65,9 +69,12 @@ sealed interface HomeEvent {
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class HomeViewModel(
     private val entries: EntryRepository,
+    private val groups: GroupRepository,
     private val settingsRepo: SettingsRepository,
     /** Slow the first time (loads the model): call off the main thread. */
     private val autoStyle: () -> AutoStyle,
+    /** Slow the first time (loads the model): call off the main thread. */
+    private val autoGroup: () -> AutoGroup,
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> =
@@ -121,9 +128,18 @@ class HomeViewModel(
 
     init {
         viewModelScope.launch(Dispatchers.IO) { entries.purgeDeleted() }
-        // Every action needs a color and an icon: style old and imported ones once they appear.
+        // Every action needs a color, an icon and a group: style and group old, new and imported ones
+        // once they appear (grouping goes by the icon, so it comes second).
         viewModelScope.launch(Dispatchers.Default) {
-            entries.count.debounce(500).collect { entries.fillMissingStyles(autoStyle()) }
+            combine(entries.count, groups.pendingCount) { count, pending -> count to pending }
+                .debounce(500)
+                .collect { (_, pending) ->
+                    entries.fillMissingStyles(autoStyle())
+                    if (pending > 0) {
+                        val s = settingsRepo.current()
+                        groups.assignNewActions(autoGroup, autoStyle, s.autoGroupActions, s.autoCreateGroups)
+                    }
+                }
         }
     }
 
@@ -147,11 +163,14 @@ class HomeViewModel(
         text = ""
         mode = InputMode.Idle
         viewModelScope.launch {
-            // The same text as a past action (ignoring case and accents) logs that action again. A new
-            // one gets a color and icon picked from how it relates to past ones.
+            // The same text as a past action (ignoring case and accents) logs that action again. One
+            // made on the Group screen but never logged keeps its look; a new one gets a color and icon
+            // picked from how it relates to past ones.
             val id = entries.addAsExisting(value, EntrySource.TEXT) ?: run {
-                val style = withContext(Dispatchers.Default) { autoStyle().pick(value, entries.styleHistory()) }
-                entries.add(value, EntrySource.TEXT, style.color, style.icon)
+                val known = groups.action(value)?.takeIf { it.color != null && it.icon != null }
+                val style = known?.let { Style(it.color!!, it.icon!!) }
+                    ?: withContext(Dispatchers.Default) { autoStyle().pick(value, entries.styleHistory()) }
+                entries.add(known?.text ?: value, EntrySource.TEXT, style.color, style.icon)
             }
             events.send(HomeEvent.Saved(id))
         }
@@ -182,7 +201,13 @@ class HomeViewModel(
 
     fun update(entry: Entry) {
         if (entry.text.isBlank()) return
-        viewModelScope.launch { entries.update(entry) }
+        viewModelScope.launch {
+            // Edited to a new action's text: that action starts in the group the entry was in.
+            val old = entries.get(entry.id)
+            val oldGroup = old?.let { groups.action(it.text)?.groupId }
+            if (oldGroup != null) groups.ensureAction(entry.text, entry.colorOverride, entry.iconOverride, oldGroup)
+            entries.update(entry)
+        }
     }
 
     fun changeTime(entry: Entry, at: Instant) {

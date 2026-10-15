@@ -10,7 +10,6 @@
     <string name="nav_analysis">Analysis</string>
     <string name="nav_settings">Settings</string>
     <string name="coming_soon">Coming soon</string>
-    <string name="group_placeholder_body">Group your repeated actions together.</string>
     <string name="analysis_placeholder_body">See streaks, frequency and patterns of your actions.</string>
 
     <!-- Days -->
@@ -124,4 +123,37 @@
     <string name="shortcut_text">Add text</string>
     <string name="shortcut_disabled">Not available</string>
     <string name="share_label">Save as action</string>
+
+    <!-- Groups -->
+    <string name="group_default_name">Other</string>
+    <string name="group_hint">Long-press a row to move it</string>
+    <string name="group_add">Add group</string>
+    <string name="group_new_title">New group</string>
+    <string name="group_edit_title">Edit group</string>
+    <string name="group_name">Name</string>
+    <string name="group_expand">Show actions</string>
+    <string name="group_collapse">Hide actions</string>
+    <string name="group_deleted">Group deleted, its actions moved to %1$s</string>
+    <string name="group_default_note">Actions that fit no other group land here. This group can\'t be deleted.</string>
+    <string name="action_new">New action</string>
+    <string name="action_new_title">New action</string>
+    <string name="action_exists">That action already exists</string>
+    <string name="action_merged">Merged into “%1$s”</string>
+    <string name="action_log_now">Log now</string>
+    <string name="action_logged">Logged “%1$s”</string>
+    <string name="action_never">Not logged yet</string>
+    <string name="action_last">%1$s · last %2$s</string>
+    <plurals name="times_count">
+        <item quantity="one">%d time</item>
+        <item quantity="other">%d times</item>
+    </plurals>
+    <plurals name="action_delete_entries">
+        <item quantity="one">Deleting it also deletes its %d logged entry.</item>
+        <item quantity="other">Deleting it also deletes its %d logged entries.</item>
+    </plurals>
+    <string name="section_groups">Groups</string>
+    <string name="pref_auto_group">Auto-group new actions</string>
+    <string name="pref_auto_group_summary">Put each new action in the group it fits best</string>
+    <string name="pref_auto_create_groups">Create groups automatically</string>
+    <string name="pref_auto_create_groups_summary">When no group fits, make one for the kind of action</string>
 </resources>

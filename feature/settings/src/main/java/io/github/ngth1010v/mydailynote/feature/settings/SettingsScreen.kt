@@ -102,6 +102,21 @@ private fun MainPage(vm: SettingsViewModel, onLicenses: () -> Unit) {
         }
         general(vm, s)
 
+        item { SectionHeader(stringResource(R.string.section_groups)) }
+        item {
+            SwitchPref(stringResource(R.string.pref_auto_group), stringResource(R.string.pref_auto_group_summary), s.autoGroupActions) { v ->
+                vm.update { it.copy(autoGroupActions = v) }
+            }
+        }
+        item {
+            SwitchPref(
+                stringResource(R.string.pref_auto_create_groups),
+                stringResource(R.string.pref_auto_create_groups_summary),
+                s.autoCreateGroups,
+                enabled = s.autoGroupActions,
+            ) { v -> vm.update { it.copy(autoCreateGroups = v) } }
+        }
+
         item { SectionHeader(stringResource(R.string.section_data)) }
         item {
             PrefItem(

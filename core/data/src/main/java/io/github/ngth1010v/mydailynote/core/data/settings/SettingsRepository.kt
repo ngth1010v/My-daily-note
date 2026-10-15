@@ -24,6 +24,8 @@ class SettingsRepository(context: Context) {
         val timeFormat = stringPreferencesKey("time_format")
         val autoBackup = booleanPreferencesKey("auto_backup")
         val updateCheck = booleanPreferencesKey("update_check")
+        val autoGroupActions = booleanPreferencesKey("auto_group_actions")
+        val autoCreateGroups = booleanPreferencesKey("auto_create_groups")
     }
 
     val settings: Flow<AppSettings> = store.data.map { it.toSettings() }.distinctUntilChanged()
@@ -39,6 +41,8 @@ class SettingsRepository(context: Context) {
             prefs[Keys.timeFormat] = s.timeFormat.name
             prefs[Keys.autoBackup] = s.autoBackup
             prefs[Keys.updateCheck] = s.updateCheck
+            prefs[Keys.autoGroupActions] = s.autoGroupActions
+            prefs[Keys.autoCreateGroups] = s.autoCreateGroups
         }
     }
 
@@ -51,6 +55,8 @@ class SettingsRepository(context: Context) {
             timeFormat = enumOr(this[Keys.timeFormat], d.timeFormat),
             autoBackup = this[Keys.autoBackup] ?: d.autoBackup,
             updateCheck = this[Keys.updateCheck] ?: d.updateCheck,
+            autoGroupActions = this[Keys.autoGroupActions] ?: d.autoGroupActions,
+            autoCreateGroups = this[Keys.autoCreateGroups] ?: d.autoCreateGroups,
         )
     }
 
