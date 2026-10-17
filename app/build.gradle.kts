@@ -14,8 +14,8 @@ android {
         applicationId = "io.github.ngth1010v.mydailynote"
         minSdk = 26
         targetSdk = 36
-        versionCode = 12
-        versionName = "0.9.0"
+        versionCode = 13
+        versionName = "0.10.0"
 
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
