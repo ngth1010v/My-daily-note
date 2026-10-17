@@ -1,5 +1,7 @@
 package io.github.ngth1010v.mydailynote.core.data.settings
 
+import io.github.ngth1010v.mydailynote.core.data.model.RecommendOptions
+
 /** FOLLOW_LAYOUT = end side of the layout direction (right in LTR, left in RTL). */
 enum class RailSide { RIGHT, LEFT, FOLLOW_LAYOUT }
 
@@ -21,4 +23,7 @@ data class AppSettings(
     val autoGroupActions: Boolean = true,
     /** With [autoGroupActions]: make a group when none fits. */
     val autoCreateGroups: Boolean = true,
+    /** Show today's likely actions, learned from history, on Home. */
+    val recommendActions: Boolean = true,
+    val recommend: RecommendOptions = RecommendOptions(),
 )

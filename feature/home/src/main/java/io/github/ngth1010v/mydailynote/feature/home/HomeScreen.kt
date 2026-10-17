@@ -32,7 +32,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.TransformOrigin
@@ -67,6 +71,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -231,7 +236,13 @@ fun HomeScreen(
                         items(
                             count = items.itemCount,
                             key = items.itemKey { it.key },
-                            contentType = items.itemContentType { if (it is HomeItem.Row) 0 else 1 },
+                            contentType = items.itemContentType {
+                                when (it) {
+                                    is HomeItem.Row -> 0
+                                    is HomeItem.Recommend -> 3
+                                    else -> 1
+                                }
+                            },
                         ) { index ->
                             when (val item = items[index]) {
                                 is HomeItem.Row -> EntryRow(
@@ -239,6 +250,12 @@ fun HomeScreen(
                                     modifier = Modifier.animateItem().rowReveal(listState, item.key, intro),
                                 )
                                 is HomeItem.Header -> DayHeader(formatters.day(item.day, today), Modifier.animateItem())
+                                is HomeItem.Recommend -> RecommendRow(
+                                    item, formatters, vm::confirm, vm::dismiss,
+                                    // Keeps the confirm button out from under the rail (the list has 16dp already).
+                                    modifier = Modifier.animateItem().rowReveal(listState, item.key, intro)
+                                        .padding(end = (endPad - 16.dp).coerceAtLeast(0.dp)),
+                                )
                                 null -> Spacer(Modifier.height(40.dp))
                             }
                         }
@@ -250,7 +267,11 @@ fun HomeScreen(
                         derivedStateOf {
                             val top = (listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return@derivedStateOf null) - 1
                             if (top !in 0 until items.itemCount) null
-                            else (items.peek(top) as? HomeItem.Row)?.day
+                            else when (val item = items.peek(top)) {
+                                is HomeItem.Row -> item.day
+                                is HomeItem.Recommend -> item.day
+                                else -> null
+                            }
                         }
                     }
                     // No backdrop: rows scroll all the way to the top edge, under the pill and search button.
@@ -360,6 +381,57 @@ private fun EntryRow(
             onStyle = { onEditor(EntryEditor.Style(entry)) },
             onDelete = { onDelete(entry) },
         )
+    }
+}
+
+/** A guessed action: faded by how unsure the guess is, with a button to log it. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun RecommendRow(
+    item: HomeItem.Recommend,
+    formatters: Formatters,
+    onConfirm: (HomeItem.Recommend) -> Unit,
+    onDismiss: (HomeItem.Recommend) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var menu by remember { mutableStateOf(false) }
+    val r = item.rec
+    Box(modifier) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .combinedClickable(onClick = {}, onLongClick = { menu = true })
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // 0.3 .. 0.75 opacity by confidence: never as solid as a logged row.
+            Row(Modifier.weight(1f).alpha(0.3f + 0.45f * r.confidence.coerceIn(0f, 1f)), verticalAlignment = Alignment.CenterVertically) {
+                val color = EntryPalette.color(r.color)
+                Box(
+                    Modifier.padding(end = 12.dp).size(40.dp).background(color.copy(alpha = 0.18f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    EntryBadge(color, r.icon, size = 22.dp)
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(r.text, style = MaterialTheme.typography.bodyLarge, fontStyle = FontStyle.Italic, maxLines = 2)
+                    Text(
+                        "~" + formatters.time24(r.at.atOffset(ZoneId.systemDefault().rules.getOffset(r.at))),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            IconButton(onClick = { onConfirm(item) }) {
+                Icon(Icons.Filled.Check, stringResource(R.string.recommend_confirm), tint = MaterialTheme.colorScheme.primary)
+            }
+        }
+        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.recommend_not_today)) },
+                onClick = { menu = false; onDismiss(item) },
+            )
+        }
     }
 }
 
@@ -522,7 +594,7 @@ private fun rememberToday(dayStartHour: Int): LocalDate {
     return today
 }
 
-private fun computeToday(dayStartHour: Int): LocalDate {
+internal fun computeToday(dayStartHour: Int): LocalDate {
     val now = Instant.now()
     return dayOf(now, ZoneId.systemDefault().rules.getOffset(now), dayStartHour)
 }

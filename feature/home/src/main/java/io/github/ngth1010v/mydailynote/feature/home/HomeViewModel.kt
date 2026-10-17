@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.flatMap
 import androidx.paging.insertSeparators
 import androidx.paging.map
 import io.github.ngth1010v.mydailynote.core.data.EntryRepository
@@ -16,6 +17,8 @@ import io.github.ngth1010v.mydailynote.core.data.autostyle.AutoGroup
 import io.github.ngth1010v.mydailynote.core.data.autostyle.AutoStyle
 import io.github.ngth1010v.mydailynote.core.data.autostyle.Style
 import io.github.ngth1010v.mydailynote.core.data.model.Entry
+import io.github.ngth1010v.mydailynote.core.data.model.Recommendation
+import io.github.ngth1010v.mydailynote.core.data.model.recommend
 import io.github.ngth1010v.mydailynote.core.data.model.EntrySource
 import io.github.ngth1010v.mydailynote.core.data.model.Suggestion
 import io.github.ngth1010v.mydailynote.core.data.model.day
@@ -32,7 +35,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -41,6 +47,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 /** One row of the Home list: an entry, or the label above a day's entries. */
 sealed interface HomeItem {
@@ -52,6 +59,11 @@ sealed interface HomeItem {
 
     data class Header(val day: LocalDate) : HomeItem {
         override val key get() = "d$day"
+    }
+
+    /** A guessed action for [day] (today), not logged yet. */
+    data class Recommend(val rec: Recommendation, val day: LocalDate) : HomeItem {
+        override val key get() = "r${rec.key}"
     }
 }
 
@@ -80,20 +92,33 @@ class HomeViewModel(
     val settings: StateFlow<AppSettings> =
         settingsRepo.settings.stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
 
-    val items: Flow<PagingData<HomeItem>> = settingsRepo.settings
+    private val rows: Flow<PagingData<HomeItem.Row>> = settingsRepo.settings
         .map { it.dayStartHour }
         .distinctUntilChanged()
         .flatMapLatest { dayStart ->
-            entries.pagedNewestFirst().map { page ->
-                page.map { HomeItem.Row(it, it.day(dayStart)) }
-                    // Newest first, rendered bottom-up: a day's label goes after its oldest entry.
-                    .insertSeparators { newer: HomeItem.Row?, older: HomeItem.Row? ->
-                        if (newer != null && (older == null || older.day != newer.day)) HomeItem.Header(newer.day)
-                        else null
-                    }
-            }
+            entries.pagedNewestFirst().map { page -> page.map { HomeItem.Row(it, it.day(dayStart)) } }
         }
         .cachedIn(viewModelScope)
+
+    /** Today's recommendations, oldest first; recomputed when entries change or the day rolls over. */
+    private val recommendations: Flow<List<HomeItem.Recommend>> = settingsRepo.settings
+        .map { if (it.recommendActions) it.dayStartHour to it.recommend else null }
+        .distinctUntilChanged()
+        .flatMapLatest { tuning ->
+            val (dayStart, options) = tuning ?: return@flatMapLatest flowOf(emptyList())
+            flow { while (true) { emit(computeToday(dayStart)); delay(60_000) } }
+                .distinctUntilChanged()
+                .flatMapLatest { today ->
+                    val offset = ZoneId.systemDefault().rules.getOffset(Instant.now())
+                    val from = today.minusDays(options.historyDays + 1L).atStartOfDay().toInstant(offset)
+                    combine(entries.since(from), settingsRepo.dismissedRecommendations(today)) { list, dismissed ->
+                        recommend(list, today, dayStart, offset, dismissed, options).map { HomeItem.Recommend(it, today) }
+                    }
+                }
+        }
+        .flowOn(Dispatchers.Default)
+
+    val items: Flow<PagingData<HomeItem>> = combine(rows, recommendations) { page, recs -> page.withLabels(recs) }
 
     var mode by mutableStateOf<InputMode>(InputMode.Idle)
         private set
@@ -186,6 +211,22 @@ class HomeViewModel(
         }
     }
 
+    /** Logs a recommendation at its time, or now if that is still ahead. */
+    fun confirm(item: HomeItem.Recommend) {
+        val r = item.rec
+        viewModelScope.launch {
+            // Logged now, a later habit wouldn't count as done: hide it for today either way.
+            settingsRepo.dismissRecommendation(item.day, r.key)
+            val at = minOf(r.at, Instant.now())
+            val id = entries.addAsExisting(r.text, EntrySource.TEXT, at) ?: entries.add(r.text, EntrySource.TEXT, r.color, r.icon, at)
+            events.send(HomeEvent.Saved(id))
+        }
+    }
+
+    fun dismiss(item: HomeItem.Recommend) {
+        viewModelScope.launch { settingsRepo.dismissRecommendation(item.day, item.rec.key) }
+    }
+
     // Entry actions
 
     fun delete(entry: Entry) {
@@ -228,4 +269,29 @@ class HomeViewModel(
     fun onQueryChange(value: String) {
         query = value
     }
+}
+
+/**
+ * Adds day labels and today's [recs] to rows listed newest first (rendered bottom-up): each
+ * recommendation goes among today's rows by time, and a day's label after its oldest row.
+ */
+private fun PagingData<HomeItem.Row>.withLabels(recs: List<HomeItem.Recommend>): PagingData<HomeItem> =
+    map { listOf<HomeItem>(it) }
+        .insertSeparators { newer: List<HomeItem>?, older: List<HomeItem>? ->
+            gap(newer?.first() as HomeItem.Row?, older?.first() as HomeItem.Row?, recs).ifEmpty { null }
+        }
+        .flatMap { it }
+
+private fun gap(newer: HomeItem.Row?, older: HomeItem.Row?, recs: List<HomeItem.Recommend>): List<HomeItem> {
+    val today = recs.firstOrNull()?.day
+    val out = ArrayList<HomeItem>()
+    if (today != null && (newer == null || newer.day == today)) {
+        val before = newer?.entry?.achievedAt
+        val after = older?.takeIf { it.day == today }?.entry?.achievedAt
+        recs.asReversed().filterTo(out) { (before == null || it.rec.at < before) && (after == null || it.rec.at >= after) }
+    }
+    if (newer != null && (older == null || older.day != newer.day)) out += HomeItem.Header(newer.day)
+    // No row today yet: today's label goes above its recommendations.
+    else if (newer == null && out.isNotEmpty() && older?.day != today) out += HomeItem.Header(today!!)
+    return out
 }

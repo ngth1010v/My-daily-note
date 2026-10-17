@@ -28,6 +28,10 @@ interface EntryDao {
     )
     fun search(match: String, limit: Int): Flow<List<EntryWithGroup>>
 
+    /** Live entries achieved at or after [from] (epoch millis). */
+    @Query("$SELECT_WITH_GROUP WHERE e.deletedAt IS NULL AND e.achievedAt >= :from")
+    fun since(from: Long): Flow<List<EntryWithGroup>>
+
     /** Most frequent texts starting with [prefix] (normalized, LIKE-escaped), ties broken by recency. */
     @Query(
         "SELECT text, colorOverride, iconOverride, COUNT(*) AS count FROM entries " +

@@ -152,6 +152,26 @@
         <item quantity="other">Deleting it also deletes its %d logged entries.</item>
     </plurals>
     <string name="section_groups">Groups</string>
+    <string name="pref_recommend">Suggest actions</string>
+    <string name="pref_recommend_summary">Show likely actions for today, learned from your history</string>
+    <string name="recommend_confirm">Log it</string>
+    <string name="recommend_not_today">Not today</string>
+    <string name="section_suggestions">Suggestions</string>
+    <string name="pref_recommend_confidence">Confidence threshold</string>
+    <string name="pref_recommend_confidence_summary">Hide guesses less sure than this</string>
+    <string name="pref_recommend_usual">Usual count</string>
+    <string name="pref_recommend_usual_summary">More are shown only when very sure</string>
+    <string name="pref_recommend_max">Maximum count</string>
+    <string name="pref_recommend_history">Learn from the last</string>
+    <string name="pref_recommend_min_days">Habit needs at least</string>
+    <string name="pref_recommend_min_days_summary">An action done once is not a habit</string>
+    <string name="pref_recommend_weekday">Same weekday weight</string>
+    <string name="pref_recommend_weekday_summary">How much more days like today count (weekly habits)</string>
+    <string name="off">Off</string>
+    <plurals name="days_count">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
     <string name="pref_auto_group">Auto-group new actions</string>
     <string name="pref_auto_group_summary">Put each new action in the group it fits best</string>
     <string name="pref_auto_create_groups">Create groups automatically</string>

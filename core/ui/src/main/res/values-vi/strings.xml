@@ -144,6 +144,25 @@
         <item quantity="other">Xóa nó cũng sẽ xóa %d lần đã ghi.</item>
     </plurals>
     <string name="section_groups">Nhóm</string>
+    <string name="pref_recommend">Gợi ý hành động</string>
+    <string name="pref_recommend_summary">Hiện các hành động hôm nay có thể làm, học từ lịch sử của bạn</string>
+    <string name="recommend_confirm">Ghi lại</string>
+    <string name="recommend_not_today">Không phải hôm nay</string>
+    <string name="section_suggestions">Gợi ý</string>
+    <string name="pref_recommend_confidence">Ngưỡng tin cậy</string>
+    <string name="pref_recommend_confidence_summary">Ẩn gợi ý kém chắc chắn hơn mức này</string>
+    <string name="pref_recommend_usual">Số gợi ý thường</string>
+    <string name="pref_recommend_usual_summary">Chỉ hiện thêm khi rất chắc chắn</string>
+    <string name="pref_recommend_max">Số gợi ý tối đa</string>
+    <string name="pref_recommend_history">Học từ khoảng</string>
+    <string name="pref_recommend_min_days">Thói quen cần ít nhất</string>
+    <string name="pref_recommend_min_days_summary">Làm một lần chưa phải thói quen</string>
+    <string name="pref_recommend_weekday">Trọng số cùng thứ</string>
+    <string name="pref_recommend_weekday_summary">Ngày cùng thứ với hôm nay được tính nặng hơn bao nhiêu (thói quen hằng tuần)</string>
+    <string name="off">Tắt</string>
+    <plurals name="days_count">
+        <item quantity="other">%d ngày</item>
+    </plurals>
     <string name="pref_auto_group">Tự xếp hành động mới vào nhóm</string>
     <string name="pref_auto_group_summary">Đưa mỗi hành động mới vào nhóm phù hợp nhất</string>
     <string name="pref_auto_create_groups">Tự tạo nhóm</string>

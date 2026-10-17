@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.ngth1010v.mydailynote.core.data.backup.BackupFormat
+import io.github.ngth1010v.mydailynote.core.data.model.RecommendOptions
 import io.github.ngth1010v.mydailynote.core.data.settings.AppSettings
 import io.github.ngth1010v.mydailynote.core.data.settings.RailSide
 import io.github.ngth1010v.mydailynote.core.data.settings.TimeFormat
@@ -101,6 +102,7 @@ private fun MainPage(vm: SettingsViewModel, onLicenses: () -> Unit) {
             )
         }
         general(vm, s)
+        suggestions(vm, s)
 
         item { SectionHeader(stringResource(R.string.section_groups)) }
         item {
@@ -276,6 +278,72 @@ private fun LazyListScope.general(vm: SettingsViewModel, s: AppSettings) {
             ),
             s.timeFormat,
         ) { v -> vm.update { it.copy(timeFormat = v) } }
+    }
+}
+
+private fun LazyListScope.suggestions(vm: SettingsViewModel, s: AppSettings) {
+    item { SectionHeader(stringResource(R.string.section_suggestions)) }
+    item {
+        SwitchPref(stringResource(R.string.pref_recommend), stringResource(R.string.pref_recommend_summary), s.recommendActions) { v ->
+            vm.update { it.copy(recommendActions = v) }
+        }
+    }
+    val on = s.recommendActions
+    val r = s.recommend
+    val tune = { f: (RecommendOptions) -> RecommendOptions -> vm.update { it.copy(recommend = f(it.recommend)) } }
+    item {
+        ChoicePref(
+            stringResource(R.string.pref_recommend_confidence),
+            (5..95 step 5).map { it to "$it%" },
+            r.minConfidencePercent,
+            enabled = on,
+            summary = "${r.minConfidencePercent}% · " + stringResource(R.string.pref_recommend_confidence_summary),
+        ) { v -> tune { it.copy(minConfidencePercent = v) } }
+    }
+    item {
+        ChoicePref(
+            stringResource(R.string.pref_recommend_usual),
+            (1..10).map { it to "$it" },
+            r.usualCount,
+            enabled = on,
+            summary = "${r.usualCount} · " + stringResource(R.string.pref_recommend_usual_summary),
+        ) { v -> tune { it.copy(usualCount = v, maxCount = maxOf(it.maxCount, v)) } }
+    }
+    item {
+        ChoicePref(
+            stringResource(R.string.pref_recommend_max),
+            (1..20).map { it to "$it" },
+            r.maxCount,
+            enabled = on,
+        ) { v -> tune { it.copy(maxCount = v, usualCount = minOf(it.usualCount, v)) } }
+    }
+    item {
+        ChoicePref(
+            stringResource(R.string.pref_recommend_history),
+            listOf(7, 14, 28, 56, 90, 180).map { it to pluralStringResource(R.plurals.days_count, it, it) },
+            r.historyDays,
+            enabled = on,
+        ) { v -> tune { it.copy(historyDays = v) } }
+    }
+    item {
+        ChoicePref(
+            stringResource(R.string.pref_recommend_min_days),
+            (1..7).map { it to pluralStringResource(R.plurals.days_count, it, it) },
+            r.minDays,
+            enabled = on,
+            summary = pluralStringResource(R.plurals.days_count, r.minDays, r.minDays) + " · " +
+                stringResource(R.string.pref_recommend_min_days_summary),
+        ) { v -> tune { it.copy(minDays = v) } }
+    }
+    item {
+        ChoicePref(
+            stringResource(R.string.pref_recommend_weekday),
+            listOf(1 to stringResource(R.string.off), 2 to "×2", 4 to "×4", 8 to "×8"),
+            r.weekdayWeight,
+            enabled = on,
+            summary = (if (r.weekdayWeight == 1) stringResource(R.string.off) else "×${r.weekdayWeight}") + " · " +
+                stringResource(R.string.pref_recommend_weekday_summary),
+        ) { v -> tune { it.copy(weekdayWeight = v) } }
     }
 }
 

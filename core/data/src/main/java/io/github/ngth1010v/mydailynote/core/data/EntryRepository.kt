@@ -40,6 +40,9 @@ class EntryRepository(
         return dao.search(match, limit).map { rows -> rows.map { it.toModel() } }
     }
 
+    fun since(from: Instant): Flow<List<Entry>> =
+        dao.since(from.toEpochMilli()).map { rows -> rows.map { it.toModel() } }
+
     fun suggestions(prefix: String, limit: Int = 5): Flow<List<Suggestion>> =
         dao.suggestions(TextNormalizer.likePrefix(prefix), limit).map { rows ->
             rows.map { Suggestion(it.text, it.colorOverride, it.iconOverride, it.count) }
