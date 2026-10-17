@@ -7,7 +7,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,7 +58,14 @@ import io.github.ngth1010v.mydailynote.core.data.settings.RailSide
 import io.github.ngth1010v.mydailynote.core.ui.R
 import io.github.ngth1010v.mydailynote.core.ui.RailButton
 import io.github.ngth1010v.mydailynote.core.ui.RailButtonGap
-import io.github.ngth1010v.mydailynote.core.ui.RailButtonSize
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.pager.PagerState
 import io.github.ngth1010v.mydailynote.core.ui.RailReservedWidth
 import io.github.ngth1010v.mydailynote.feature.group.GroupScreen
 import io.github.ngth1010v.mydailynote.feature.group.GroupViewModel
@@ -85,7 +91,7 @@ enum class Route(val label: Int, val icon: ImageVector) {
 
 private const val REPO_SLUG = "ngth1010v/My-daily-note"
 
-/** The 4 screens plus the always-visible floating navigation rail. */
+/** The 4 screens plus the bottom navigation bar. */
 @Composable
 fun MainScaffold(
     container: AppContainer,
@@ -93,7 +99,7 @@ fun MainScaffold(
     launch: HomeLaunch?,
     onLaunchHandled: () -> Unit,
 ) {
-    // One pager page per route, in rail order; swiping left/right switches screens.
+    // One pager page per route, in bar order; swiping left/right switches screens.
     val pager = rememberPagerState { Route.entries.size }
     val scope = rememberCoroutineScope()
     val route = Route.entries[pager.currentPage]
@@ -113,126 +119,144 @@ fun MainScaffold(
     val home = rememberHomeController(homeVm)
     var groupDragging by remember { mutableStateOf(false) }
 
-    // Which physical side the rail sits on, expressed as layout start/end.
+    // Which physical side Home's buttons sit on, expressed as layout start/end.
     val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val railAtEnd = when (settings.railSide) {
         RailSide.RIGHT -> ltr
         RailSide.LEFT -> !ltr
         RailSide.FOLLOW_LAYOUT -> true
     }
-    // Screens are full width; only Home's bottom input panel and snackbar keep clear of the rail.
+    // Home's bottom input panel and snackbar keep clear of its floating buttons.
     val railPadding = if (railAtEnd) PaddingValues(end = RailReservedWidth) else PaddingValues(start = RailReservedWidth)
 
-    Box(
+    Column(
         Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
-            // Includes the keyboard, so the rail and input panel move above it.
-            .windowInsetsPadding(WindowInsets.safeDrawing)
+            // The bottom inset (system bar, keyboard) is a spacer below, so the bar's color fills it.
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
     ) {
-        HorizontalPager(
-            state = pager,
-            // While typing, horizontal drags belong to the input, not the pager; so do drags of Group rows.
-            userScrollEnabled = !home.isCapturing && !home.isEditing && !groupDragging,
-            key = { it },
-            modifier = Modifier.fillMaxSize(),
-        ) { page ->
-            when (Route.entries[page]) {
-                Route.HOME -> HomeScreen(home, railPadding, launch, onLaunchHandled)
-                Route.GROUP -> {
-                    val vm: GroupViewModel = viewModel(factory = viewModelFactory {
-                        initializer { GroupViewModel(container.groups, container.entries) { container.autoStyle } }
-                    })
-                    GroupScreen(
-                        vm,
-                        railPadding = railPadding,
-                        // The rail's height (route buttons + paddings), so the last row can scroll above it.
-                        bottomClearance = (RailButtonSize + RailButtonGap) * Route.entries.size + 32.dp,
-                        onDragging = { groupDragging = it },
-                    )
-                }
-                Route.ANALYSIS -> ComingSoon(Route.ANALYSIS, R.string.analysis_placeholder_body)
-                Route.SETTINGS -> {
-                    val vm: SettingsViewModel = viewModel(factory = viewModelFactory {
-                        initializer {
-                            SettingsViewModel(
-                                settingsRepo = container.settings,
-                                entries = container.entries,
-                                backup = container.backup,
-                                autoStyle = { container.autoStyle },
-                                appInfo = AppInfo(BuildConfig.VERSION_NAME, "https://github.com/$REPO_SLUG", REPO_SLUG),
-                            )
-                        }
-                    })
-                    SettingsScreen(vm)
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            HorizontalPager(
+                state = pager,
+                // While typing, horizontal drags belong to the input, not the pager; so do drags of Group rows.
+                userScrollEnabled = !home.isCapturing && !home.isEditing && !groupDragging,
+                key = { it },
+                modifier = Modifier.fillMaxSize(),
+            ) { page ->
+                when (Route.entries[page]) {
+                    Route.HOME -> HomeScreen(home, railPadding, launch, onLaunchHandled)
+                    Route.GROUP -> {
+                        val vm: GroupViewModel = viewModel(factory = viewModelFactory {
+                            initializer { GroupViewModel(container.groups, container.entries) { container.autoStyle } }
+                        })
+                        GroupScreen(
+                            vm,
+                            railPadding = PaddingValues(),
+                            bottomClearance = 8.dp,
+                            onDragging = { groupDragging = it },
+                        )
+                    }
+                    Route.ANALYSIS -> ComingSoon(Route.ANALYSIS, R.string.analysis_placeholder_body)
+                    Route.SETTINGS -> {
+                        val vm: SettingsViewModel = viewModel(factory = viewModelFactory {
+                            initializer {
+                                SettingsViewModel(
+                                    settingsRepo = container.settings,
+                                    entries = container.entries,
+                                    backup = container.backup,
+                                    autoStyle = { container.autoStyle },
+                                    appInfo = AppInfo(BuildConfig.VERSION_NAME, "https://github.com/$REPO_SLUG", REPO_SLUG),
+                                )
+                            }
+                        })
+                        SettingsScreen(vm)
+                    }
                 }
             }
-        }
 
-        AnimatedVisibility(
-            visible = !(route == Route.HOME && home.isEditing),
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier.align(if (railAtEnd) Alignment.BottomEnd else Alignment.BottomStart),
-        ) {
-        Surface(
-            shape = RoundedCornerShape(32.dp),
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            tonalElevation = 3.dp,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            modifier = Modifier.padding(8.dp),
-        ) {
-            Column(
-                Modifier.padding(8.dp).animateContentSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
+            // Home's add (or save / cancel) buttons, floating in the bottom corner.
+            androidx.compose.animation.AnimatedVisibility(
+                visible = route == Route.HOME && !home.isEditing,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.align(if (railAtEnd) Alignment.BottomEnd else Alignment.BottomStart),
             ) {
-                val capturing = route == Route.HOME && home.isCapturing
-                AnimatedVisibility(
-                    visible = route == Route.HOME,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
+                Surface(
+                    shape = RoundedCornerShape(32.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    tonalElevation = 3.dp,
+                    modifier = Modifier.padding(8.dp),
                 ) {
                     Column(
-                        Modifier.padding(bottom = if (capturing) 0.dp else RailButtonGap),
+                        Modifier.animateContentSize(),
                         verticalArrangement = Arrangement.spacedBy(RailButtonGap),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         HomeRailActions(home)
-                        if (!capturing) HorizontalDivider(Modifier.width(24.dp))
-                    }
-                }
-                AnimatedVisibility(
-                    visible = !capturing,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
-                ) {
-                    Box {
-                        // Selection pill: follows the pager, so it slides along with a swipe.
-                        val indicator = MaterialTheme.colorScheme.secondaryContainer
-                        Box(
-                            Modifier
-                                .offset {
-                                    val position = (pager.currentPage + pager.currentPageOffsetFraction)
-                                        .coerceIn(0f, Route.entries.lastIndex.toFloat())
-                                    IntOffset(0, (position * (RailButtonSize + RailButtonGap).toPx()).roundToInt())
-                                }
-                                .size(RailButtonSize)
-                                .background(indicator, CircleShape)
-                        )
-                        Column(verticalArrangement = Arrangement.spacedBy(RailButtonGap)) {
-                            Route.entries.forEach { r ->
-                                RailButton(
-                                    icon = r.icon,
-                                    label = stringResource(r.label),
-                                    selected = r.ordinal == pager.targetPage,
-                                    onClick = { go(r) },
-                                )
-                            }
-                        }
                     }
                 }
             }
         }
+
+        val barVisible = !(route == Route.HOME && (home.isCapturing || home.isEditing))
+        AnimatedVisibility(
+            visible = barVisible,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically(),
+        ) {
+            NavBar(pager, go)
+        }
+        // Includes the keyboard, so the bar, buttons and input panel move above it.
+        Spacer(
+            Modifier
+                .fillMaxWidth()
+                .windowInsetsBottomHeight(WindowInsets.safeDrawing)
+                .background(if (barVisible) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surface)
+        )
+    }
+}
+
+/** Bar button size: with the paddings, the bar is 0.7x its first height (34 + 2 * 8). */
+private val NavButtonSize = 29.dp
+
+/** Full-width bottom navigation bar, one equal slot per route. */
+@Composable
+private fun NavBar(pager: PagerState, go: (Route) -> Unit) {
+    Column {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        BoxWithConstraints(
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(vertical = 3.dp),
+        ) {
+            val slot = maxWidth / Route.entries.size
+            // Selection pill: follows the pager, so it slides along with a swipe.
+            val indicator = MaterialTheme.colorScheme.secondaryContainer
+            Box(
+                Modifier
+                    .offset {
+                        val position = (pager.currentPage + pager.currentPageOffsetFraction)
+                            .coerceIn(0f, Route.entries.lastIndex.toFloat())
+                        IntOffset((position * slot.toPx() + (slot - NavButtonSize).toPx() / 2).roundToInt(), 0)
+                    }
+                    .size(NavButtonSize)
+                    .background(indicator, CircleShape)
+            )
+            Row(Modifier.fillMaxWidth()) {
+                Route.entries.forEach { r ->
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        RailButton(
+                            icon = r.icon,
+                            label = stringResource(r.label),
+                            selected = r.ordinal == pager.targetPage,
+                            onClick = { go(r) },
+                            size = NavButtonSize,
+                        )
+                    }
+                }
+            }
         }
     }
 }

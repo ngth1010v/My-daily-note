@@ -18,14 +18,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** Total horizontal space the floating rail takes (pill + margin); bottom panels pad by this to stay clear of it. */
-val RailReservedWidth = 66.dp
-
-/** Size of a regular rail button, and the gap between rail buttons. */
+/** Size of a navigation bar button, and the gap between stacked buttons. */
 val RailButtonSize = 34.dp
 val RailButtonGap = 8.dp
+
+/** Home's floating add / save / cancel buttons: 1.2x a navigation button. */
+val ActionButtonSize = RailButtonSize * 1.2f
+
+/** Horizontal space Home's floating buttons take (button + margins); bottom panels pad by this. */
+val RailReservedWidth = ActionButtonSize + 16.dp
 
 /**
  * A round rail button. [emphasized] = the filled primary button (voice / save); [level] (0..1) pulses it
@@ -43,6 +47,7 @@ fun RailButton(
     enabled: Boolean = true,
     level: (() -> Float)? = null,
     onLongClick: (() -> Unit)? = null,
+    size: Dp = RailButtonSize,
 ) {
     val colors = MaterialTheme.colorScheme
     val (bgTarget, fgTarget) = when {
@@ -52,10 +57,9 @@ fun RailButton(
     }
     val bg by animateColorAsState(if (enabled) bgTarget else bgTarget.copy(alpha = bgTarget.alpha * 0.4f), label = "railBg")
     val fg by animateColorAsState(if (enabled) fgTarget else fgTarget.copy(alpha = 0.38f), label = "railFg")
-    // Every button has the same size, so the rail keeps one width on all screens.
     Box(
         modifier
-            .size(RailButtonSize)
+            .size(size)
             // Read in the draw phase: the level changes 10x a second and must not recompose the rail.
             .graphicsLayer {
                 val scale = 1f + (level?.invoke() ?: 0f).coerceIn(0f, 1f) * 0.15f
@@ -79,7 +83,7 @@ fun RailButton(
             icon,
             contentDescription = label,
             tint = fg,
-            modifier = Modifier.size(17.dp),
+            modifier = Modifier.size(size * 0.5f),
         )
     }
 }

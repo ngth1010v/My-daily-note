@@ -61,7 +61,7 @@
     <string name="lang_system">Theo hệ thống</string>
     <string name="pref_dynamic_color">Màu động</string>
     <string name="pref_dynamic_color_summary">Dùng màu theo hình nền (Android 12+)</string>
-    <string name="pref_rail_side">Vị trí thanh điều hướng</string>
+    <string name="pref_rail_side">Vị trí nút thêm</string>
     <string name="rail_right">Bên phải</string>
     <string name="rail_left">Bên trái</string>
     <string name="rail_follow">Theo hướng bố cục</string>

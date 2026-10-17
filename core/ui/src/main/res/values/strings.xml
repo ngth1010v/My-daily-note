@@ -65,7 +65,7 @@
     <string name="lang_system">System default</string>
     <string name="pref_dynamic_color">Dynamic color</string>
     <string name="pref_dynamic_color_summary">Use colors from your wallpaper (Android 12+)</string>
-    <string name="pref_rail_side">Navigation bar side</string>
+    <string name="pref_rail_side">Add button side</string>
     <string name="rail_right">Right</string>
     <string name="rail_left">Left</string>
     <string name="rail_follow">Follow layout direction</string>

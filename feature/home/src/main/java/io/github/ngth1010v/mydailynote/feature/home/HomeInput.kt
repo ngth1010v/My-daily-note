@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.ngth1010v.mydailynote.core.ui.EntryBadge
 import io.github.ngth1010v.mydailynote.core.ui.EntryPalette
+import io.github.ngth1010v.mydailynote.core.ui.ActionButtonSize
 import io.github.ngth1010v.mydailynote.core.ui.R
 import io.github.ngth1010v.mydailynote.core.ui.RailButton
 
@@ -52,25 +53,25 @@ fun rememberHomeController(vm: HomeViewModel): HomeController {
     return remember(vm) { HomeController(vm, snackbar) }
 }
 
-/** Home's contextual rail buttons, shown above the route buttons. */
+/** Home's floating add / save / cancel buttons. */
 @Composable
 fun ColumnScope.HomeRailActions(controller: HomeController) {
     val vm = controller.vm
     when (vm.mode) {
         InputMode.Idle -> {
-            RailButton(Icons.Filled.Edit, stringResource(R.string.action_add), onClick = { vm.startTyping() }, emphasized = true)
+            RailButton(Icons.Filled.Edit, stringResource(R.string.action_add), onClick = { vm.startTyping() }, emphasized = true, size = ActionButtonSize)
         }
         InputMode.Typing -> {
-            RailButton(Icons.Filled.Check, stringResource(R.string.action_save), onClick = vm::save, emphasized = true, enabled = vm.text.isNotBlank())
-            RailButton(Icons.Filled.Close, stringResource(R.string.action_cancel), onClick = vm::cancelInput)
+            RailButton(Icons.Filled.Check, stringResource(R.string.action_save), onClick = vm::save, emphasized = true, enabled = vm.text.isNotBlank(), size = ActionButtonSize)
+            RailButton(Icons.Filled.Close, stringResource(R.string.action_cancel), onClick = vm::cancelInput, size = ActionButtonSize)
         }
     }
 }
 
-/** True while Home is taking input; the app hides the route buttons then. */
+/** True while Home is taking input; the app hides the navigation bar then. */
 val HomeController.isCapturing: Boolean get() = vm.mode != InputMode.Idle
 
-/** True while the entry edit sub screen is open; the app hides the whole rail then. */
+/** True while the entry edit sub screen is open; the app hides the navigation bar and Home's buttons then. */
 val HomeController.isEditing: Boolean get() = vm.detail != null
 
 /** Bottom panel: text field with suggestions. */

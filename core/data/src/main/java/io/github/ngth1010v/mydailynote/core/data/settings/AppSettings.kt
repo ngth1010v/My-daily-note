@@ -2,7 +2,7 @@ package io.github.ngth1010v.mydailynote.core.data.settings
 
 import io.github.ngth1010v.mydailynote.core.data.model.RecommendOptions
 
-/** FOLLOW_LAYOUT = end side of the layout direction (right in LTR, left in RTL). */
+/** Side of Home's floating add button. FOLLOW_LAYOUT = end side of the layout direction (right in LTR, left in RTL). */
 enum class RailSide { RIGHT, LEFT, FOLLOW_LAYOUT }
 
 enum class TimeFormat { SYSTEM, H12, H24 }
