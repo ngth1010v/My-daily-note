@@ -38,6 +38,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -401,7 +402,7 @@ private fun RecommendRow(
             Modifier
                 .fillMaxWidth()
                 .combinedClickable(onClick = {}, onLongClick = { menu = true })
-                .padding(vertical = 8.dp),
+                .padding(top = 8.dp, bottom = 8.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // 0.3 .. 0.75 opacity by confidence: never as solid as a logged row.
@@ -422,8 +423,25 @@ private fun RecommendRow(
                     )
                 }
             }
-            IconButton(onClick = { onConfirm(item) }) {
-                Icon(Icons.Filled.Check, stringResource(R.string.recommend_confirm), tint = MaterialTheme.colorScheme.primary)
+            Surface(
+                onClick = { onDismiss(item) },
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp, end = 8.dp),
+            ) {
+                Text(
+                    stringResource(R.string.recommend_not_today),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                )
+            }
+            val green = EntryPalette.color("green")
+            IconButton(
+                onClick = { onConfirm(item) },
+                colors = IconButtonDefaults.iconButtonColors(containerColor = green.copy(alpha = 0.18f), contentColor = green),
+            ) {
+                Icon(Icons.Filled.Check, stringResource(R.string.recommend_confirm))
             }
         }
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
