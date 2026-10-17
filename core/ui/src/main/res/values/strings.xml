@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">My daily note</string>
+    <string name="app_name" translatable="false">My diary</string>
     <string name="lang_en" translatable="false">English</string>
     <string name="lang_vi" translatable="false">Tiếng Việt</string>
 

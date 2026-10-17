@@ -77,7 +77,7 @@ object BackupCodec {
 
     fun decodeJson(text: String): BackupData = try {
         val root = JSONObject(text)
-        if (root.optString("app") != APP_ID) throw BackupFormatException("Not a My daily note backup")
+        if (root.optString("app") != APP_ID) throw BackupFormatException("Not a My diary backup")
         val groups = root.optJSONArray("groups").objects().map { o ->
             Group(
                 id = o.getLong("id"),

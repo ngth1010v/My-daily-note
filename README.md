@@ -1,4 +1,4 @@
-# My daily note
+# My diary
 
 [![Build](https://github.com/ngth1010v/My-diary/actions/workflows/build.yml/badge.svg)](https://github.com/ngth1010v/My-diary/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](LICENSE)
